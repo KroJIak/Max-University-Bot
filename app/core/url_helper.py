@@ -26,10 +26,8 @@ def get_service_url(domain_url_env: str, host_env: str, port_env: str, default_h
     host = os.getenv(host_env, default_host)
     port = os.getenv(port_env, str(default_port))
     
-    # Определяем схему по хосту
-    scheme = "https" if host not in ["0.0.0.0", "127.0.0.1", "localhost"] else "http"
-    
-    return f"{scheme}://{host}:{port}"
+    # Всегда используем http для внутренних сервисов
+    return f"http://{host}:{port}"
 
 
 async def get_url_with_fallback(domain_url: Optional[str] = None, host: Optional[str] = None, port: Optional[int] = None) -> str:
@@ -50,8 +48,8 @@ async def get_url_with_fallback(domain_url: Optional[str] = None, host: Optional
     
     # Приоритет 2: HOST:PORT
     if host and port:
-        scheme = "https" if host not in ["0.0.0.0", "127.0.0.1", "localhost"] else "http"
-        return f"{scheme}://{host}:{port}"
+        # Всегда используем http для внутренних сервисов
+        return f"http://{host}:{port}"
     
     # Fallback на значения по умолчанию
     return "http://0.0.0.0:8000"
