@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Скрипт для тестирования всех API endpoints
-Использование: python test_api.py [--base-url http://localhost:8000]
+Использование: python test_api.py [--base-url http://localhost:8003]
 """
 
 import requests
@@ -24,7 +24,7 @@ class Colors:
 
 
 class APITester:
-    def __init__(self, base_url: str = "http://localhost:8000"):
+    def __init__(self, base_url: str = "http://localhost:8003"):
         self.base_url = base_url.rstrip('/')
         self.api_base = f"{self.base_url}/api/v1"
         self.test_user_id = 123456789  # Тестовый user_id
@@ -721,8 +721,8 @@ def main():
     parser = argparse.ArgumentParser(description="Test all API endpoints")
     parser.add_argument(
         "--base-url",
-        default="http://localhost:8000",
-        help="Base URL of the API (default: http://localhost:8000)"
+        default="http://localhost:8003",
+        help="Base URL of the API (default: http://localhost:8003)"
     )
     
     args = parser.parse_args()

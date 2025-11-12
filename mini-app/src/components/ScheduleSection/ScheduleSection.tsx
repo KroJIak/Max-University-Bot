@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 
 import type { DayTab, ScheduleItem } from '../../shared/types/schedule';
-import { ArrowRightIcon } from '../icons';
+import { ArrowRightIcon } from '@components/icons';
 import { ScheduleCard } from './components/ScheduleCard';
 import { ScheduleTabs } from './components/ScheduleTabs';
 import styles from './ScheduleSection.module.scss';
@@ -10,9 +10,15 @@ type ScheduleSectionProps = {
   title?: string;
   tabs: DayTab[];
   scheduleByTab: Record<string, ScheduleItem[]>;
+  onOpenFullSchedule?: () => void;
 };
 
-export function ScheduleSection({ title = 'Расписание', tabs, scheduleByTab }: ScheduleSectionProps) {
+export function ScheduleSection({
+  title = 'Расписание',
+  tabs,
+  scheduleByTab,
+  onOpenFullSchedule,
+}: ScheduleSectionProps) {
   const [activeTab, setActiveTab] = useState(() => tabs[0]?.id ?? '');
 
   const schedule = useMemo(() => {
@@ -31,7 +37,12 @@ export function ScheduleSection({ title = 'Расписание', tabs, schedule
     <section className={styles.section}>
       <header className={styles.header}>
         <h2 className={styles.title}>{title}</h2>
-        <button className={styles.moreButton} type="button" aria-label="Открыть расписание">
+        <button
+          className={styles.moreButton}
+          type="button"
+          aria-label="Открыть расписание"
+          onClick={onOpenFullSchedule}
+        >
           <ArrowRightIcon className={styles.moreIcon} />
         </button>
       </header>

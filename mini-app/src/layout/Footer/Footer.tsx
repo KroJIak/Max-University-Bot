@@ -1,5 +1,5 @@
-import type { IconProps } from '../../components/icons';
-import { HomeIcon, ProfileIcon, ServicesIcon } from '../../components/icons';
+import type { IconProps } from '@components/icons';
+import { HomeIcon, ProfileIcon, ServicesIcon } from '@components/icons';
 import styles from './Footer.module.scss';
 
 export type FooterNavKey = 'home' | 'services' | 'profile';

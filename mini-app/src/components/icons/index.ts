@@ -1,4 +1,5 @@
 export * from './ArrowRightIcon';
+export * from './BackIcon';
 export * from './BellIcon';
 export * from './HomeIcon';
 export * from './ProfileIcon';

@@ -1,4 +1,5 @@
-import { BellIcon, SearchIcon } from '../../components/icons';
+import { BellIcon, SearchIcon } from '@components/icons';
+import { HeaderBackButton } from '@components/Header';
 import { headerActions, type HeaderActionId } from './header.constants';
 import styles from './Header.module.scss';
 
@@ -10,9 +11,10 @@ const actionIconMap: Record<HeaderActionId, JSX.Element> = {
 type HeaderProps = {
   title: string;
   showAvatar?: boolean;
+  onBack?: () => void;
 };
 
-export function Header({ title, showAvatar = true }: HeaderProps) {
+export function Header({ title, showAvatar = true, onBack }: HeaderProps) {
   const brandClassName = showAvatar ? styles.brand : `${styles.brand} ${styles.brandCompact}`;
 
   return (
@@ -22,6 +24,7 @@ export function Header({ title, showAvatar = true }: HeaderProps) {
         <span className={styles.title}>{title}</span>
       </div>
       <div className={styles.actions}>
+        {onBack && <HeaderBackButton onClick={onBack} />}
         {headerActions.map((action) => (
           <button key={action.id} type="button" className={styles.action} aria-label={action.label}>
             {actionIconMap[action.id]}

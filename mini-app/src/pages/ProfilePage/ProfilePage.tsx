@@ -1,4 +1,4 @@
-import { ArrowRightIcon } from '../../components/icons';
+import { ProfileInfoSection, ProfileLogoutButton, ProfileSettingsSection, ProfileStatsSection, ProfileSummarySection } from '@components/Profile';
 import styles from './ProfilePage.module.scss';
 
 type StatCard = {
@@ -7,7 +7,6 @@ type StatCard = {
   value: string;
   suffix: string;
   icon: string;
-  hint?: string;
 };
 
 type SettingsGroup = {
@@ -22,7 +21,6 @@ const statCards: StatCard[] = [
     value: '3.90',
     suffix: 'ср. балл',
     icon: '🟦',
-    hint: '— —',
   },
   {
     id: 'debts',
@@ -55,78 +53,20 @@ const settingsGroups: SettingsGroup[] = [
   },
 ];
 
+const infoRows = [
+  { id: 'faculty', label: 'Факультет', value: 'Экономики и управления' },
+  { id: 'group', label: 'Группа', value: 'ЭК-04-22' },
+  { id: 'curator', label: 'Куратор', value: 'Ирина Соколова' },
+];
+
 export function ProfilePage() {
   return (
     <div className={styles.page}>
-      <section className={styles.card}>
-        <div className={styles.avatar} />
-        <div className={styles.info}>
-          <span className={styles.name}>Александра Иванова</span>
-          <span className={styles.value}>Студентка, 3 курс</span>
-        </div>
-      </section>
-
-      <section className={styles.card}>
-        <div className={styles.row}>
-          <span className={styles.label}>Факультет</span>
-          <span className={styles.value}>Экономики и управления</span>
-        </div>
-        <div className={styles.row}>
-          <span className={styles.label}>Группа</span>
-          <span className={styles.value}>ЭК-04-22</span>
-        </div>
-        <div className={styles.row}>
-          <span className={styles.label}>Куратор</span>
-          <span className={styles.value}>Ирина Соколова</span>
-        </div>
-      </section>
-
-       <section className={styles.stats}>
-        {statCards.map((stat) => (
-          <article key={stat.id} className={styles.statCard}>
-            <header className={styles.statHeader}>
-              <span className={styles.statTitle}>{stat.title}</span>
-              <button type="button" className={styles.statAction} aria-label={stat.title}>
-                <ArrowRightIcon className={styles.statActionIcon} />
-              </button>
-            </header>
-            <div className={styles.statBody}>
-              <span className={styles.statIcon} aria-hidden="true">
-                {stat.icon}
-              </span>
-              <div className={styles.statValueGroup}>
-                <span className={styles.statValue}>{stat.value}</span>
-                <span className={styles.statSuffix}>{stat.suffix}</span>
-                {stat.hint && <span className={styles.statHint}>{stat.hint}</span>}
-              </div>
-            </div>
-          </article>
-        ))}
-      </section>
-
-      <section className={styles.settings}>
-        {settingsGroups.map((group) => (
-          <article key={group.id} className={styles.settingsCard}>
-            <div className={styles.settingsList}>
-              {group.items.map((item) => (
-                <button key={item.id} type="button" className={styles.settingsItem}>
-                  <span className={styles.settingsIcon} aria-hidden="true">
-                    {item.icon}
-                  </span>
-                  <span className={styles.settingsTitle}>{item.title}</span>
-                  <ArrowRightIcon className={styles.settingsArrow} />
-                </button>
-              ))}
-            </div>
-          </article>
-        ))}
-        <button type="button" className={styles.logoutButton}>
-          <span className={styles.logoutIcon} aria-hidden="true">
-            ⎋
-          </span>
-          Выйти из аккаунта
-        </button>
-      </section>
+      <ProfileSummarySection name="Александра Иванова" subtitle="Студентка, 3 курс" />
+      <ProfileInfoSection rows={infoRows} />
+      <ProfileStatsSection cards={statCards} />
+      <ProfileSettingsSection groups={settingsGroups} />
+      <ProfileLogoutButton />
     </div>
   );
 }

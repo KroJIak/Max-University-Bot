@@ -58,11 +58,13 @@ services:
     container_name: maxbot_admin_panel
     environment:
       - ADMIN_PANEL_HOST=${ADMIN_PANEL_HOST:-0.0.0.0}
-      - ADMIN_PANEL_PORT=${ADMIN_PANEL_PORT:-8080}
+      - ADMIN_PANEL_PORT=${ADMIN_PANEL_PORT:-8081}
       - ADMIN_PANEL_DOMAIN_URL=${ADMIN_PANEL_DOMAIN_URL:-}
       - MAX_API_DOMAIN_URL=${MAX_API_DOMAIN_URL:-}
+      - MAX_API_HOST=${MAX_API_HOST:-0.0.0.0}
+      - MAX_API_PORT=${MAX_API_PORT:-8003}
     ports:
-      - "${ADMIN_PANEL_PORT:-8080}:8080"
+      - "${ADMIN_PANEL_PORT:-8081}:8080"
     depends_on:
       - api
     restart: unless-stopped

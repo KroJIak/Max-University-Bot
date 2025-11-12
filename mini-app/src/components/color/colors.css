@@ -1,0 +1,41 @@
+:root {
+  /* === Background Surfaces === */
+  --color-bg-base: #12192e;
+  --color-surface-primary: #23252d;
+  --color-surface-secondary: #1f2128;
+  --color-surface-hover: #272932;
+  --color-surface-soft: rgba(255, 255, 255, 0.04);
+
+  /* === Borders === */
+  --color-border-soft: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.12);
+  --color-border-info: rgba(104, 150, 255, 0.4);
+
+  /* === Typography === */
+  --color-text-primary: #ffffff;
+  --color-text-secondary: rgba(255, 255, 255, 0.72);
+  --color-text-muted: rgba(255, 255, 255, 0.5);
+  --color-text-disabled: rgba(255, 255, 255, 0.28);
+
+  /* === Accents === */
+  --color-accent-primary: #4baeff;
+  --color-accent-warning: #ffad3a;
+  --color-accent-success: #5bd778;
+  --color-accent-success-strong: #58cc8a;
+  --color-accent-lecture: #4ad871;
+  --color-accent-practice: #ff9f3a;
+
+  /* === Gradients === */
+  --gradient-primary: linear-gradient(180deg, rgba(99, 118, 189, 0.9) 0%, rgba(70, 84, 143, 0.78) 100%);
+  --gradient-avatar: linear-gradient(180deg, #6aa1ff 0%, #345bff 100%);
+
+  /* === Shadows === */
+  --shadow-elevated: 0 20px 40px rgba(6, 9, 22, 0.45);
+
+  /* === Radii & Typography === */
+  --radius-lg: 28px;
+  --radius-md: 18px;
+  --radius-sm: 12px;
+  --font-family-base: 'Inter', 'SF Pro Display', 'Segoe UI', sans-serif;
+}
+

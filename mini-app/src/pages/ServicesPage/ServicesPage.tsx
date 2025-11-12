@@ -25,6 +25,16 @@ const serviceSections: ServiceSection[] = [
       { id: 'contacts', title: 'Контакты', icon: '☎️' },
     ],
   },
+  {
+    id: 'platforms',
+    title: 'Веб-платформы',
+    items: [
+      { id: 'courses', title: 'Мои курсы', icon: '✅' },
+      { id: 'portfolio', title: 'Моё портфолио', icon: '🗂️' },
+      { id: 'schedule', title: 'Моё расписание', icon: '📆' },
+      { id: 'paid', title: 'Платные услуги', icon: '💳' },
+    ],
+  },
 ];
 
 export function ServicesPage() {

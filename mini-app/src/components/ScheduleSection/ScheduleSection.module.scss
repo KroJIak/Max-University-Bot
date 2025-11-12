@@ -2,13 +2,11 @@
   width: 100%;
   padding: clamp(16px, 5vw, 24px);
   border-radius: var(--radius-lg);
-  background: #23252d;
+  background: var(--color-surface-primary);
   display: flex;
   flex-direction: column;
   gap: 18px;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
-    0 20px 40px rgba(6, 9, 22, 0.45);
+  box-shadow: var(--shadow-elevated);
 }
 
 .header {
@@ -21,6 +19,7 @@
   font-size: 22px;
   font-weight: 600;
   letter-spacing: 0.2px;
+  color: var(--color-text-primary);
 }
 
 .moreButton {
@@ -28,17 +27,18 @@
   height: 40px;
   border-radius: 16px;
   border: none;
-  background: none;
+  background: var(--color-surface-soft);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-secondary);
-  transition: color 0.2s ease;
+  color: var(--color-text-secondary);
+  transition: color 0.2s ease, background 0.2s ease;
 }
 
 .moreButton:hover {
-  color: var(--text-primary);
+  color: var(--color-text-primary);
+  background: var(--color-surface-hover);
 }
 
 .moreIcon {

@@ -3,47 +3,74 @@ import { useState } from 'react';
 import { Layout } from './layout';
 import type { FooterNavKey } from './layout/Footer';
 import { MainPage } from './pages/MainPage';
+import { NewsPage } from './pages/NewsPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { SchedulePage } from './pages/SchedulePage';
 import { ServicesPage } from './pages/ServicesPage';
 
 type PageConfig = {
   title: string;
   showAvatar?: boolean;
-  Component: () => JSX.Element;
-};
-
-const pages: Record<FooterNavKey, PageConfig> = {
-  home: {
-    title: 'Главная',
-    showAvatar: false,
-    Component: MainPage,
-  },
-  services: {
-    title: 'Сервисы',
-    showAvatar: false,
-    Component: ServicesPage,
-  },
-  profile: {
-    title: 'Профиль',
-    showAvatar: false,
-    Component: ProfilePage,
-  },
+  footerActive: FooterNavKey;
+  render: () => JSX.Element;
+  onBack?: () => void;
 };
 
 export function App() {
-  const [activePage, setActivePage] = useState<FooterNavKey>('home');
+  const [activePage, setActivePage] = useState<'home' | 'services' | 'profile' | 'scheduleDetail' | 'newsDetail'>('home');
 
-  const pageConfig = pages[activePage];
-  const PageComponent = pageConfig.Component;
+  const pageConfig: PageConfig =
+    activePage === 'home'
+      ? {
+          title: 'Главная',
+          showAvatar: false,
+          footerActive: 'home',
+          render: () => (
+            <MainPage
+              onOpenFullSchedule={() => setActivePage('scheduleDetail')}
+              onOpenAllNews={() => setActivePage('newsDetail')}
+            />
+          ),
+        }
+      : activePage === 'services'
+        ? {
+            title: 'Сервисы',
+            showAvatar: false,
+            footerActive: 'services',
+            render: () => <ServicesPage />,
+          }
+        : activePage === 'profile'
+          ? {
+              title: 'Профиль',
+              showAvatar: false,
+              footerActive: 'profile',
+              render: () => <ProfilePage />,
+            }
+          : activePage === 'scheduleDetail'
+            ? {
+                title: 'Расписание',
+                showAvatar: false,
+                footerActive: 'home',
+                render: () => <SchedulePage />,
+                onBack: () => setActivePage('home'),
+              }
+            : {
+                title: 'Новости',
+                showAvatar: false,
+                footerActive: 'home',
+                render: () => <NewsPage />,
+                onBack: () => setActivePage('home'),
+              };
 
   return (
     <Layout
       title={pageConfig.title}
-      activePage={activePage}
+      activePage={pageConfig.footerActive}
       onNavigate={setActivePage}
       showAvatar={pageConfig.showAvatar}
+      onBack={pageConfig.onBack}
     >
-      <PageComponent />
+      {pageConfig.render()}
     </Layout>
   );
 }

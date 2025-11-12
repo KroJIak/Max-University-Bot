@@ -1,28 +1,52 @@
 // Получаем базовый URL для MAX API с приоритетом: сначала домен, потом HOST:PORT
+// Переменные встраиваются через envsubst во время запуска контейнера
 function getMaxApiUrl() {
-    // Приоритет 1: Доменный URL (если задан через переменную окружения в админ панели)
-    // В браузере мы не можем получить переменные окружения напрямую,
-    // поэтому используем логику: если есть домен в window.location - используем его
-    // Иначе формируем из HOST:PORT
-    
-    // Пробуем получить домен из текущего URL (если админ панель доступна по домену)
-    const currentOrigin = window.location.origin;
-    const domainUrl = currentOrigin.replace(':8080', ':8000') + '/api/v1';
-    
-    // Если админ панель доступна не через localhost/0.0.0.0, используем домен
-    if (!currentOrigin.includes('localhost') && !currentOrigin.includes('127.0.0.1') && !currentOrigin.includes('0.0.0.0')) {
-        return domainUrl;
+    // Приоритет 1: Доменный URL из переменной окружения (если задан)
+    const maxApiDomainUrl = '${MAX_API_DOMAIN_URL:-}';
+    if (maxApiDomainUrl && maxApiDomainUrl.trim() !== '') {
+        return maxApiDomainUrl.trim().replace(/\/+$/, '') + '/api/v1';
     }
     
-    // Приоритет 2: HOST:PORT (локальный URL)
-    return domainUrl;
+    // Приоритет 2: HOST:PORT из переменных окружения
+    const maxApiHost = '${MAX_API_HOST:-0.0.0.0}';
+    const maxApiPort = '${MAX_API_PORT:-8003}';
+    
+    // Если HOST = 0.0.0.0, используем текущий хост (для доступа из браузера)
+    if (maxApiHost === '0.0.0.0' || maxApiHost === 'localhost') {
+        // Используем текущий хост, но меняем порт на порт API
+        const currentHost = window.location.hostname;
+        return `http://${currentHost}:${maxApiPort}/api/v1`;
+    }
+    
+    return `http://${maxApiHost}:${maxApiPort}/api/v1`;
 }
 
 const API_BASE_URL = getMaxApiUrl();
 
-// Функция для выполнения запросов
+// Функция для выполнения запросов с fallback на HOST:PORT если домен не работает
 async function fetchWithFallback(url, options = {}) {
-    return await fetch(url, options);
+    try {
+        const response = await fetch(url, options);
+        // Если запрос успешен (не сетевые ошибки), возвращаем ответ
+        return response;
+    } catch (error) {
+        // Если ошибка сети и мы использовали домен, пробуем HOST:PORT
+        if (url.includes('https://') || url.includes('http://') && !url.includes(window.location.hostname)) {
+            console.warn('Запрос к домену не удался, пробуем локальный URL:', error);
+            const maxApiHost = '${MAX_API_HOST:-0.0.0.0}';
+            const maxApiPort = '${MAX_API_PORT:-8003}';
+            const fallbackHost = maxApiHost === '0.0.0.0' ? window.location.hostname : maxApiHost;
+            const fallbackUrl = url.replace(/https?:\/\/[^\/]+/, `http://${fallbackHost}:${maxApiPort}`);
+            
+            try {
+                return await fetch(fallbackUrl, options);
+            } catch (fallbackError) {
+                console.error('Запрос к локальному URL также не удался:', fallbackError);
+                throw error; // Возвращаем оригинальную ошибку
+            }
+        }
+        throw error;
+    }
 }
 
 // Список функций с их описаниями и endpoints для University API, разделенные по категориям

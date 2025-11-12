@@ -1,3 +1,4 @@
+import { palette } from '../../color/palette';
 import type { ScheduleItem } from '../../../shared/types/schedule';
 import styles from './ScheduleCard.module.scss';
 
@@ -11,8 +12,8 @@ const typeLabel: Record<ScheduleItem['type'], string> = {
 };
 
 const typeColor: Record<ScheduleItem['type'], string> = {
-  lecture: '#4ad871',
-  practice: '#ff9f3a',
+  lecture: palette.accentLecture,
+  practice: palette.accentPractice,
 };
 
 export function ScheduleCard({ item }: ScheduleCardProps) {

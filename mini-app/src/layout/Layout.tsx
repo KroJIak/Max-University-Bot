@@ -10,6 +10,7 @@ type LayoutProps = PropsWithChildren<{
   activePage: FooterNavKey;
   onNavigate: (page: FooterNavKey) => void;
   showAvatar?: boolean;
+  onBack?: (() => void) | null;
 }>;
 
 export function Layout({
@@ -18,10 +19,11 @@ export function Layout({
   activePage,
   onNavigate,
   showAvatar = true,
+  onBack = null,
 }: LayoutProps) {
   return (
     <div className={styles.container}>
-      <Header title={title} showAvatar={showAvatar} />
+      <Header title={title} showAvatar={showAvatar} onBack={onBack ?? undefined} />
       <main className={styles.main}>{children}</main>
       <Footer activePage={activePage} onNavigate={onNavigate} />
     </div>
