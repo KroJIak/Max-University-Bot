@@ -69,8 +69,8 @@ services:
 
   university-api:
     build:
-      context: .
-      dockerfile: ./university-app/Dockerfile
+      context: ./university-app
+      dockerfile: Dockerfile
     container_name: maxbot_university_api
     environment:
       - UNIVERSITY_API_HOST=${UNIVERSITY_API_HOST:-0.0.0.0}

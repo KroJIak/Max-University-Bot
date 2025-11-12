@@ -3,11 +3,11 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Устанавливаем зависимости
-COPY university-app/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Копируем код University API (полностью изолированный)
-COPY university-app/ .
+COPY . .
 
 # Устанавливаем переменные окружения
 ENV PYTHONPATH=/app
