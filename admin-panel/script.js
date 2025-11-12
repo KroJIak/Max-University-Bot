@@ -1,14 +1,26 @@
-// Получаем базовый URL для MAX API с fallback на CLOUDPUB_URL
+// Получаем базовый URL для MAX API с приоритетом: сначала домен, потом HOST:PORT
 function getMaxApiUrl() {
-    // Локальный URL
-    const localUrl = window.location.origin.replace(':8080', ':8000') + '/api/v1';
-    return localUrl;
+    // Приоритет 1: Доменный URL (если задан через переменную окружения в админ панели)
+    // В браузере мы не можем получить переменные окружения напрямую,
+    // поэтому используем логику: если есть домен в window.location - используем его
+    // Иначе формируем из HOST:PORT
+    
+    // Пробуем получить домен из текущего URL (если админ панель доступна по домену)
+    const currentOrigin = window.location.origin;
+    const domainUrl = currentOrigin.replace(':8080', ':8000') + '/api/v1';
+    
+    // Если админ панель доступна не через localhost/0.0.0.0, используем домен
+    if (!currentOrigin.includes('localhost') && !currentOrigin.includes('127.0.0.1') && !currentOrigin.includes('0.0.0.0')) {
+        return domainUrl;
+    }
+    
+    // Приоритет 2: HOST:PORT (локальный URL)
+    return domainUrl;
 }
 
 const API_BASE_URL = getMaxApiUrl();
 
 // Функция для выполнения запросов
-// Fallback на CLOUDPUB_URL обрабатывается на стороне MAX API сервера
 async function fetchWithFallback(url, options = {}) {
     return await fetch(url, options);
 }

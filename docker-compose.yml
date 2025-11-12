@@ -27,7 +27,7 @@ services:
       - DATABASE_URL=${DATABASE_URL:-postgresql://maxbot:maxbot123@postgres:5432/maxbot_db}
       - MAX_API_HOST=${MAX_API_HOST:-0.0.0.0}
       - MAX_API_PORT=${MAX_API_PORT:-8000}
-      - MAX_API_CLOUDPUB_URL=${MAX_API_CLOUDPUB_URL:-}
+      - MAX_API_DOMAIN_URL=${MAX_API_DOMAIN_URL:-}
     ports:
       - "${MAX_API_PORT:-8000}:${MAX_API_PORT:-8000}"
     depends_on:
@@ -59,8 +59,8 @@ services:
     environment:
       - ADMIN_PANEL_HOST=${ADMIN_PANEL_HOST:-0.0.0.0}
       - ADMIN_PANEL_PORT=${ADMIN_PANEL_PORT:-8080}
-      - ADMIN_PANEL_CLOUDPUB_URL=${ADMIN_PANEL_CLOUDPUB_URL:-}
-      - MAX_API_CLOUDPUB_URL=${MAX_API_CLOUDPUB_URL:-}
+      - ADMIN_PANEL_DOMAIN_URL=${ADMIN_PANEL_DOMAIN_URL:-}
+      - MAX_API_DOMAIN_URL=${MAX_API_DOMAIN_URL:-}
     ports:
       - "${ADMIN_PANEL_PORT:-8080}:8080"
     depends_on:
@@ -75,7 +75,7 @@ services:
     environment:
       - UNIVERSITY_API_HOST=${UNIVERSITY_API_HOST:-0.0.0.0}
       - UNIVERSITY_API_PORT=${UNIVERSITY_API_PORT:-8001}
-      - UNIVERSITY_API_CLOUDPUB_URL=${UNIVERSITY_API_CLOUDPUB_URL:-}
+      - UNIVERSITY_API_DOMAIN_URL=${UNIVERSITY_API_DOMAIN_URL:-}
       - UNIVERSITY_DATABASE_URL=${UNIVERSITY_DATABASE_URL:-postgresql://maxbot:maxbot123@postgres:5432/university_db}
     ports:
       - "${UNIVERSITY_API_PORT:-8001}:8001"

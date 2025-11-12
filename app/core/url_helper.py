@@ -1,68 +1,58 @@
 import os
 from typing import Optional
-import httpx
+from urllib.parse import urlparse, urlunparse
 
 
-async def get_url_with_fallback(local_url: str, cloudpub_url: Optional[str] = None) -> str:
+def get_service_url(domain_url_env: str, host_env: str, port_env: str, default_host: str = "0.0.0.0", default_port: int = 8000) -> str:
     """
-    Получить URL с fallback на CLOUDPUB_URL если локальный запрос не работает
-    
-    Проверяет доступность локального URL через GET запрос на health endpoint.
-    Если локальный URL недоступен, возвращает cloudpub URL.
+    Получить URL сервиса с приоритетом: сначала домен (если задан), потом HOST:PORT
     
     Args:
-        local_url: Локальный URL для попытки подключения
-        cloudpub_url: CLOUDPUB_URL из переменной окружения (опционально)
+        domain_url_env: Имя переменной окружения с доменным URL (например, "MAX_API_DOMAIN_URL")
+        host_env: Имя переменной окружения с хостом (например, "MAX_API_HOST")
+        port_env: Имя переменной окружения с портом (например, "MAX_API_PORT")
+        default_host: Хост по умолчанию, если переменная окружения не задана
+        default_port: Порт по умолчанию, если переменная окружения не задана
     
     Returns:
-        URL который работает (локальный или cloudpub)
+        URL сервиса (доменный URL или http://HOST:PORT)
     """
-    # Если cloudpub_url не передан, пытаемся получить из переменной окружения
-    if not cloudpub_url:
-        cloudpub_url = os.getenv("UNIVERSITY_API_CLOUDPUB_URL") or os.getenv("MAX_API_CLOUDPUB_URL")
+    # Приоритет 1: Доменный URL (если задан и не пустой)
+    domain_url = os.getenv(domain_url_env, "").strip()
+    if domain_url:
+        return domain_url.rstrip("/")
     
-    # Если cloudpub_url не задан, просто возвращаем локальный URL
-    if not cloudpub_url:
-        return local_url
+    # Приоритет 2: HOST:PORT
+    host = os.getenv(host_env, default_host)
+    port = os.getenv(port_env, str(default_port))
     
-    # Пробуем сначала локальный URL через health endpoint
-    # Извлекаем base_url из local_url и проверяем /health
-    from urllib.parse import urlparse, urlunparse
-    local_parsed = urlparse(local_url)
-    health_url = urlunparse((
-        local_parsed.scheme,
-        local_parsed.netloc,
-        "/health",  # Проверяем health endpoint
-        "",
-        "",
-        ""
-    ))
+    # Определяем схему по хосту
+    scheme = "https" if host not in ["0.0.0.0", "127.0.0.1", "localhost"] else "http"
     
-    try:
-        async with httpx.AsyncClient(timeout=2.0) as client:
-            # Делаем GET запрос на health endpoint для проверки доступности
-            response = await client.get(health_url)
-            if response.status_code < 500:  # Если не 5xx ошибка, считаем что работает
-                return local_url
-    except (httpx.RequestError, httpx.TimeoutException):
-        # Локальный URL не доступен, используем cloudpub
-        pass
+    return f"{scheme}://{host}:{port}"
+
+
+async def get_url_with_fallback(domain_url: Optional[str] = None, host: Optional[str] = None, port: Optional[int] = None) -> str:
+    """
+    Получить URL с приоритетом: сначала домен (если задан), потом HOST:PORT
     
-    # Если локальный не работает, используем cloudpub
-    # Заменяем хост и порт в local_url на cloudpub_url
-    if cloudpub_url:
-        cloudpub_parsed = urlparse(cloudpub_url.rstrip("/"))
-        
-        # Собираем новый URL с cloudpub хостом, но с путем из local_url
-        new_url = urlunparse((
-            cloudpub_parsed.scheme or "http",
-            cloudpub_parsed.netloc,
-            local_parsed.path,
-            local_parsed.params,
-            local_parsed.query,
-            local_parsed.fragment
-        ))
-        return new_url
+    Args:
+        domain_url: Доменный URL (приоритет 1)
+        host: Хост для формирования URL (приоритет 2)
+        port: Порт для формирования URL (приоритет 2)
     
-    return local_url
+    Returns:
+        URL (доменный URL или http://HOST:PORT)
+    """
+    # Приоритет 1: Доменный URL
+    if domain_url and domain_url.strip():
+        return domain_url.strip().rstrip("/")
+    
+    # Приоритет 2: HOST:PORT
+    if host and port:
+        scheme = "https" if host not in ["0.0.0.0", "127.0.0.1", "localhost"] else "http"
+        return f"{scheme}://{host}:{port}"
+    
+    # Fallback на значения по умолчанию
+    return "http://0.0.0.0:8000"
 
