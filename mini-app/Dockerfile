@@ -1,5 +1,4 @@
-# Build stage
-FROM node:20-alpine AS builder
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -12,27 +11,9 @@ RUN npm ci
 # Копируем исходники
 COPY . .
 
-# Собираем приложение
-RUN npm run build
-
-# Production stage
-FROM nginx:alpine
-
-# Копируем собранные файлы из builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Настройка nginx для SPA
-RUN echo 'server { \
-    listen 8002; \
-    server_name localhost; \
-    root /usr/share/nginx/html; \
-    index index.html; \
-    location / { \
-        try_files $uri $uri/ /index.html; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
-
+# Открываем порт
 EXPOSE 8002
 
-CMD ["nginx", "-g", "daemon off;"]
+# Запускаем dev сервер через npm
+CMD ["sh", "-c", "npm run dev -- --host ${MINI_APP_HOST:-0.0.0.0} --port ${MINI_APP_PORT:-8002}"]
 
