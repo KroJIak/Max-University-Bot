@@ -3,7 +3,7 @@ from typing import Optional
 from urllib.parse import urlparse, urlunparse
 
 
-def get_service_url(domain_url_env: str, host_env: str, port_env: str, default_host: str = "0.0.0.0", default_port: int = 8000) -> str:
+def get_service_url(domain_url_env: str, host_env: str, port_env: str, default_host: str = "0.0.0.0", default_port: int = 8003) -> str:
     """
     Получить URL сервиса с приоритетом: сначала домен (если задан), потом HOST:PORT
     
@@ -52,5 +52,5 @@ async def get_url_with_fallback(domain_url: Optional[str] = None, host: Optional
         return f"http://{host}:{port}"
     
     # Fallback на значения по умолчанию
-    return "http://0.0.0.0:8000"
+    return "http://0.0.0.0:8003"
 

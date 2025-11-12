@@ -9,5 +9,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Копируем код
 COPY . .
 
-CMD ["sh", "-c", "uvicorn main:app --host ${MAX_API_HOST:-0.0.0.0} --port ${MAX_API_PORT:-8000}"]
+CMD ["sh", "-c", "uvicorn main:app --host ${MAX_API_HOST:-0.0.0.0} --port ${MAX_API_PORT:-8003}"]
 

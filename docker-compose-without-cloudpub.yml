@@ -26,10 +26,10 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL:-postgresql://maxbot:maxbot123@postgres:5432/maxbot_db}
       - MAX_API_HOST=${MAX_API_HOST:-0.0.0.0}
-      - MAX_API_PORT=${MAX_API_PORT:-8000}
+      - MAX_API_PORT=${MAX_API_PORT:-8003}
       - MAX_API_DOMAIN_URL=${MAX_API_DOMAIN_URL:-}
     ports:
-      - "${MAX_API_PORT:-8000}:${MAX_API_PORT:-8000}"
+      - "${MAX_API_PORT:-8003}:${MAX_API_PORT:-8003}"
     depends_on:
       postgres:
         condition: service_healthy
