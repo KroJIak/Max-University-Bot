@@ -1,45 +1,82 @@
 .card {
   border-radius: var(--radius-lg);
-  padding: 20px;
+  padding: clamp(18px, 5vw, 26px);
   background: var(--color-surface-primary);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: clamp(16px, 4vw, 24px);
   box-shadow: var(--shadow-elevated);
 }
 
+.summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(16px, 4vw, 22px);
+  width: 100%;
+}
+
 .avatar {
-  width: 72px;
-  height: 72px;
-  border-radius: 18px;
+  width: clamp(168px, 28vw, 240px);
+  height: clamp(168px, 28vw, 240px);
+  border-radius: 48px;
   background: var(--gradient-avatar);
 }
 
 .info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: clamp(10px, 3vw, 16px);
+  align-items: center;
+  text-align: center;
+}
+
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 .name {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: clamp(22px, 5vw, 28px);
+  font-weight: 700;
+  color: var(--color-text-primary);
 }
 
 .value {
-  font-size: 15px;
-  color: var(--color-text-primary);
+  font-size: clamp(15px, 3.6vw, 17px);
+  color: var(--color-text-secondary);
 }
 
 .row {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.row[data-last='true'] {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .label {
   font-size: 13px;
   color: var(--color-text-muted);
+}
+
+.universityCard {
+  align-items: flex-start;
+  padding-block: clamp(16px, 4vw, 22px);
+}
+
+.universityName {
+  font-size: clamp(20px, 4.6vw, 26px);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  text-align: center;
 }
 
 .stats {
