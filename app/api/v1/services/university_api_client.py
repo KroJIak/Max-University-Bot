@@ -215,3 +215,30 @@ async def call_university_api_platforms(
         response.raise_for_status()
         return response.json()
 
+
+async def call_university_api_services(
+    config: Dict[str, Any]
+) -> dict:
+    """Вызвать University API для получения списка сервисов
+    
+    Args:
+        config: Конфигурация University API из БД (должен содержать base_url)
+    
+    Returns:
+        dict со списком сервисов от University API
+    
+    Raises:
+        httpx.HTTPStatusError: Если запрос вернул ошибку HTTP
+        httpx.RequestError: Если произошла ошибка подключения
+    """
+    base_url = config["base_url"].rstrip("/")
+    url = f"{base_url}/students/services"
+    
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        response = await client.get(
+            url,
+            headers={"Content-Type": "application/json"}
+        )
+        response.raise_for_status()
+        return response.json()
+

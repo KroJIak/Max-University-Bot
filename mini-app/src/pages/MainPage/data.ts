@@ -1,5 +1,5 @@
 import type { NewsItem } from '../../shared/types/news';
-import type { DayTab, ScheduleItem } from '../../shared/types/schedule';
+import type { DayTab, ScheduleItem } from '@shared/types/schedule';
 
 export const dayTabs: DayTab[] = [
   { id: 'today', label: 'Сегодня, пн', description: 'Активное расписание' },
@@ -17,6 +17,7 @@ export const scheduleByDay: Record<string, ScheduleItem[]> = {
       type: 'practice',
       room: 'Г-304',
       note: 'Общая пара',
+      audience: 'all',
     },
     {
       id: 'physics-1',
@@ -26,6 +27,7 @@ export const scheduleByDay: Record<string, ScheduleItem[]> = {
       type: 'practice',
       room: 'Г-304',
       note: 'Общая пара',
+      audience: 'all',
     },
     {
       id: 'logic-1',
@@ -35,6 +37,17 @@ export const scheduleByDay: Record<string, ScheduleItem[]> = {
       type: 'lecture',
       room: 'Г-301',
       note: 'Общая пара',
+      audience: 'all',
+    },
+    {
+      id: 'python-workshop-1',
+      start: '16:30',
+      end: '17:50',
+      title: 'Практикум по Python',
+      type: 'practice',
+      room: 'Л-208',
+      note: 'Подгруппа 1',
+      audience: 'subgroup1',
     },
   ],
   tomorrow: [
@@ -45,7 +58,18 @@ export const scheduleByDay: Record<string, ScheduleItem[]> = {
       title: 'Английский язык',
       type: 'practice',
       room: 'Б-210',
-      note: 'Работа в группах',
+      note: 'Подгруппа 2',
+      audience: 'subgroup2',
+    },
+    {
+      id: 'english-common',
+      start: '11:40',
+      end: '13:00',
+      title: 'Английский — общий семинар',
+      type: 'practice',
+      room: 'Б-210',
+      note: 'Общая пара',
+      audience: 'all',
     },
   ],
   afterTomorrow: [
@@ -57,6 +81,7 @@ export const scheduleByDay: Record<string, ScheduleItem[]> = {
       type: 'lecture',
       room: 'А-104',
       note: 'Общая пара',
+      audience: 'all',
     },
   ],
 };

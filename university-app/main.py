@@ -4,7 +4,43 @@ from api.students import router as students_router
 from core.database import engine, Base
 import os
 
-app = FastAPI(title="University API", version="1.0.0")
+app = FastAPI(
+    title="University API",
+    version="1.0.0",
+    description="""
+    ## University API - API для работы с сайтом университета
+    
+    Этот API предоставляет endpoints для взаимодействия с сайтом университета,
+    включая логин студентов, получение данных студентов, расписания, преподавателей и т.д.
+    
+    ### Основные возможности:
+    
+    * **Логин студентов**: выполнение логина на сайте университета и сохранение cookies сессии
+    * **Получение данных студентов**: личные данные, расписание, преподаватели, контакты
+    * **Информация о преподавателях**: получение информации о конкретных преподавателях
+    * **Контакты деканатов и кафедр**: получение контактной информации
+    * **Список платформ**: получение списка полезных веб-платформ университета
+    
+    ### Работа с cookies
+    
+    API автоматически управляет cookies сессии для каждого студента.
+    Cookies сохраняются в БД после успешного логина и используются для последующих запросов.
+    
+    ### Scraping
+    
+    API использует web scraping для получения данных с сайта университета.
+    Все данные парсятся с официального сайта университета.
+    """,
+    terms_of_service="https://example.com/terms/",
+    contact={
+        "name": "API Support",
+        "email": "support@example.com",
+    },
+    license_info={
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT",
+    },
+)
 
 # CORS middleware
 app.add_middleware(
@@ -62,12 +98,52 @@ async def shutdown_event():
     print("University API service stopped")
 
 
-@app.get("/")
+@app.get(
+    "/",
+    summary="Root",
+    description="Возвращает информацию о сервисе University API.",
+    response_description="Информация о сервисе",
+    responses={
+        200: {"description": "Информация о сервисе"}
+    }
+)
 async def root():
+    """Root
+    
+    Возвращает информацию о сервисе University API.
+    
+    **Примеры использования:**
+    
+    ```python
+    import requests
+    
+    response = requests.get("http://localhost:8002/")
+    ```
+    """
     return {"service": "University API", "version": "1.0.0"}
 
 
-@app.get("/health")
+@app.get(
+    "/health",
+    summary="Health Check",
+    description="Проверяет работоспособность API. Возвращает статус сервиса.",
+    response_description="Статус сервиса",
+    responses={
+        200: {"description": "Сервис работает"}
+    }
+)
 async def health():
+    """Health Check
+    
+    Проверяет работоспособность API. Возвращает статус сервиса.
+    
+    **Примеры использования:**
+    
+    ```python
+    import requests
+    
+    response = requests.get("http://localhost:8002/health")
+    ```
+    """
     return {"status": "healthy"}
 

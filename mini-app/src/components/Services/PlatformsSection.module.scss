@@ -1,0 +1,104 @@
+.section {
+  width: 100%;
+  padding: clamp(18px, 5vw, 26px);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-primary);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(18px, 3vw, 24px);
+  box-shadow: var(--shadow-elevated);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: clamp(20px, 4vw, 24px);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: 0.2px;
+}
+
+.moreButton {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--color-surface-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.moreButton:hover {
+  transform: translateY(-2px);
+  color: var(--color-text-primary);
+  background: var(--color-surface-hover);
+}
+
+.moreIcon {
+  width: 22px;
+  height: 22px;
+}
+
+.list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(10px, 3vw, 14px);
+  align-items: start;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.card {
+  border-radius: 24px;
+  padding: clamp(12px, 3vw, 16px) clamp(10px, 2.8vw, 14px);
+  background: var(--color-surface-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 88px;
+  width: 100%;
+  border: none;
+  color: var(--color-text-primary);
+  text-align: center;
+  cursor: pointer;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 16px 28px rgba(6, 9, 22, 0.34);
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 20px 34px rgba(5, 8, 20, 0.42);
+}
+
+.cardIcon {
+  font-size: clamp(32px, 6vw, 42px);
+  line-height: 1;
+}
+
+.cardLabel {
+  font-size: clamp(12px, 2.4vw, 13px);
+  font-weight: 600;
+  line-height: 1.24;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
+  text-align: center;
+}
+

@@ -5,8 +5,10 @@ RUN apk add --no-cache gettext
 
 # Копируем файлы админ панели
 COPY index.html /usr/share/nginx/html/
+COPY login.html /usr/share/nginx/html/
 COPY styles.css /usr/share/nginx/html/
 COPY script.js.template /usr/share/nginx/html/script.js.template
+COPY login.js /usr/share/nginx/html/login.js.template
 
 # Копируем entrypoint скрипт
 COPY docker-entrypoint.sh /docker-entrypoint.sh
@@ -18,6 +20,9 @@ RUN echo 'server { \
     server_name localhost; \
     root /usr/share/nginx/html; \
     index index.html; \
+    location /login.html { \
+        try_files /login.html =404; \
+    } \
     location / { \
         try_files $uri $uri/ /index.html; \
     } \

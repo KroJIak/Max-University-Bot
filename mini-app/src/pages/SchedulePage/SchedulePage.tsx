@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 
-import type { ScheduleItem } from '../../shared/types/schedule';
+import { useSubgroup } from '@shared/state/subgroup';
+import { filterLessonsBySubgroup } from '@shared/utils/schedule';
+import type { ScheduleItem } from '@shared/types/schedule';
 import { MonthCalendar, ScheduleLessons } from '@components/ScheduleDetail';
 import type { CalendarCell } from '@components/ScheduleDetail/types';
 import { scheduleByDay } from '../MainPage/data';
@@ -108,9 +110,13 @@ export function SchedulePage() {
   const today = new Date();
   const [view, setView] = useState<MonthMetadata>({ month: today.getMonth(), year: today.getFullYear() });
   const [selectedDate, setSelectedDate] = useState(today);
+  const { subgroup } = useSubgroup();
 
   const calendarCells = useMemo(() => buildCalendar(view), [view]);
-  const lessons = useMemo(() => getLessonsByDate(selectedDate), [selectedDate]);
+  const lessons = useMemo(
+    () => filterLessonsBySubgroup(getLessonsByDate(selectedDate), subgroup),
+    [selectedDate, subgroup],
+  );
 
   return (
     <div className={styles.page}>

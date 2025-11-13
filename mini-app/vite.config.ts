@@ -43,6 +43,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@components': fileURLToPath(new URL('./src/components', import.meta.url)),
+        '@shared': fileURLToPath(new URL('./src/shared', import.meta.url)),
       },
     },
     server: {

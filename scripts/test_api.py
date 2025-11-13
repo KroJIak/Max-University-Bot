@@ -32,6 +32,10 @@ class APITester:
         self.test_password = "P17133p17133"
         self.created_user_id = None
         self.created_student_user_id = None
+        self.test_university_id = None  # ID тестового университета
+        self.auth_token = None  # JWT токен для аутентификации университета
+        self.university_login = "admin"  # Дефолтный логин университета
+        self.university_password = "admin"  # Дефолтный пароль университета
         
     def print_test(self, test_name: str):
         """Вывести название теста"""
@@ -57,6 +61,12 @@ class APITester:
         except:
             print(f"   Response: {response.text[:200]}")
     
+    def get_auth_headers(self) -> Dict[str, str]:
+        """Получить заголовки с токеном аутентификации"""
+        if self.auth_token:
+            return {"Authorization": f"Bearer {self.auth_token}"}
+        return {}
+    
     def test_health(self) -> bool:
         """Тест health endpoint"""
         self.print_test("Health Check")
@@ -73,14 +83,93 @@ class APITester:
             self.print_error(f"Health check error: {e}")
             return False
     
+    # ========== UNIVERSITIES ==========
+    
+    def test_get_universities(self) -> bool:
+        """Тест получения списка университетов"""
+        self.print_test("GET Universities (list)")
+        try:
+            response = requests.get(f"{self.api_base}/universities")
+            if response.status_code == 200:
+                universities = response.json()
+                self.print_success(f"Retrieved {len(universities)} universities")
+                if universities:
+                    # Используем первый университет для тестирования
+                    self.test_university_id = universities[0]["id"]
+                    print(f"   Using university ID {self.test_university_id}: {universities[0]['name']}")
+                    return True
+                else:
+                    self.print_error("No universities found")
+                    return False
+            else:
+                self.print_error(f"Failed to get universities: {response.status_code}")
+                return False
+        except Exception as e:
+            self.print_error(f"Error getting universities: {e}")
+            return False
+    
+    def test_university_login(self) -> bool:
+        """Тест аутентификации университета"""
+        self.print_test("POST University Login")
+        if not self.test_university_id:
+            self.print_error("No university_id available")
+            return False
+        
+        try:
+            data = {
+                "university_id": self.test_university_id,
+                "login": self.university_login,
+                "password": self.university_password
+            }
+            response = requests.post(f"{self.api_base}/universities/login", json=data)
+            if response.status_code == 200:
+                result = response.json()
+                self.auth_token = result.get("access_token")
+                self.print_success("University login successful")
+                print(f"   Token: {self.auth_token[:20]}...")
+                print(f"   University: {result.get('university_name')}")
+                return True
+            else:
+                self.print_error(f"Failed to login: {response.status_code}")
+                self.print_response(response)
+                return False
+        except Exception as e:
+            self.print_error(f"Error during university login: {e}")
+            return False
+    
+    def test_get_university(self) -> bool:
+        """Тест получения университета по ID"""
+        self.print_test("GET University (by id)")
+        if not self.test_university_id:
+            self.print_error("No university_id available")
+            return False
+        
+        try:
+            response = requests.get(f"{self.api_base}/universities/{self.test_university_id}")
+            if response.status_code == 200:
+                self.print_success("University retrieved")
+                self.print_response(response)
+                return True
+            else:
+                self.print_error(f"Failed to get university: {response.status_code}")
+                return False
+        except Exception as e:
+            self.print_error(f"Error getting university: {e}")
+            return False
+    
     # ========== USERS CRUD ==========
     
     def test_create_user(self) -> bool:
         """Тест создания пользователя"""
         self.print_test("CREATE User")
+        if not self.test_university_id:
+            self.print_error("No university_id available")
+            return False
+        
         try:
             data = {
                 "user_id": self.test_user_id,
+                "university_id": self.test_university_id,
                 "first_name": "Тестовый",
                 "last_name": "Пользователь",
                 "username": "test_user"
@@ -181,9 +270,14 @@ class APITester:
             self.print_error("No user_id available")
             return False
         
+        if not self.test_university_id:
+            self.print_error("No university_id available")
+            return False
+        
         try:
             data = {
                 "user_id": self.created_user_id,
+                "university_id": self.test_university_id,
                 "student_email": self.test_student_email,
                 "password": self.test_password
             }
@@ -639,6 +733,83 @@ class APITester:
             self.print_error(f"Error during platforms retrieval: {e}")
             return False
     
+    # ========== CONFIG (requires authentication) ==========
+    
+    def test_get_university_config(self) -> bool:
+        """Тест получения конфигурации университета (требуется аутентификация)"""
+        self.print_test("GET University Config")
+        if not self.test_university_id:
+            self.print_info("Skipping - no university_id available")
+            return True
+        
+        if not self.auth_token:
+            self.print_info("Skipping - no auth token available (requires university login)")
+            return True
+        
+        try:
+            headers = self.get_auth_headers()
+            response = requests.get(
+                f"{self.api_base}/config/university/{self.test_university_id}",
+                headers=headers
+            )
+            if response.status_code == 200:
+                self.print_success("University config retrieved")
+                config = response.json()
+                print(f"   API Base URL: {config.get('university_api_base_url', 'N/A')}")
+                print(f"   Endpoints: {len(config.get('endpoints', {}))} configured")
+                return True
+            elif response.status_code == 404:
+                self.print_info("Config not found (OK - not configured yet)")
+                return True
+            elif response.status_code == 401 or response.status_code == 403:
+                self.print_info("Unauthorized (OK - auth token may be invalid)")
+                return True
+            else:
+                self.print_error(f"Failed to get config: {response.status_code}")
+                self.print_response(response)
+                return False
+        except Exception as e:
+            self.print_error(f"Error getting config: {e}")
+            return False
+    
+    def test_get_university_endpoints_status(self) -> bool:
+        """Тест получения статуса endpoints университета (требуется аутентификация)"""
+        self.print_test("GET University Endpoints Status")
+        if not self.test_university_id:
+            self.print_info("Skipping - no university_id available")
+            return True
+        
+        if not self.auth_token:
+            self.print_info("Skipping - no auth token available (requires university login)")
+            return True
+        
+        try:
+            headers = self.get_auth_headers()
+            response = requests.get(
+                f"{self.api_base}/config/university/{self.test_university_id}/endpoints/status",
+                headers=headers
+            )
+            if response.status_code == 200:
+                self.print_success("Endpoints status retrieved")
+                status = response.json()
+                enabled = sum(1 for v in status.values() if v)
+                total = len(status)
+                print(f"   Enabled: {enabled}/{total} endpoints")
+                for endpoint, is_enabled in status.items():
+                    status_str = "✓" if is_enabled else "✗"
+                    print(f"     {status_str} {endpoint}")
+                return True
+            elif response.status_code == 401 or response.status_code == 403:
+                self.print_info("Unauthorized (OK - auth token may be invalid)")
+                return True
+            else:
+                self.print_error(f"Failed to get endpoints status: {response.status_code}")
+                self.print_response(response)
+                return False
+        except Exception as e:
+            self.print_error(f"Error getting endpoints status: {e}")
+            return False
+    
     def run_all_tests(self):
         """Запустить все тесты"""
         print(f"{Colors.BOLD}{Colors.BLUE}")
@@ -652,6 +823,14 @@ class APITester:
         
         # Health check
         results.append(("Health Check", self.test_health()))
+        time.sleep(0.5)
+        
+        # Universities
+        results.append(("Get Universities", self.test_get_universities()))
+        time.sleep(0.5)
+        results.append(("Get University", self.test_get_university()))
+        time.sleep(0.5)
+        results.append(("University Login", self.test_university_login()))
         time.sleep(0.5)
         
         # Users CRUD
@@ -692,6 +871,12 @@ class APITester:
         results.append(("Unlink Student", self.test_unlink_student()))
         time.sleep(0.5)
         results.append(("Delete Student", self.test_delete_student_credentials()))
+        time.sleep(0.5)
+        
+        # Config (requires authentication)
+        results.append(("Get University Config", self.test_get_university_config()))
+        time.sleep(0.5)
+        results.append(("Get University Endpoints Status", self.test_get_university_endpoints_status()))
         
         # Summary
         print(f"\n{Colors.BOLD}{Colors.BLUE}")

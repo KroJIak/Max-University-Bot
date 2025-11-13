@@ -1,0 +1,64 @@
+.card {
+  display: flex;
+  gap: 18px;
+  padding: 18px 20px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+  box-shadow: var(--shadow-elevated);
+}
+
+.timeColumn {
+  min-width: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.time {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+}
+
+.timeMuted {
+  font-size: 16px;
+  color: var(--color-text-muted);
+}
+
+.timeZone {
+  font-size: 12px;
+  color: var(--color-accent-primary);
+  font-weight: 600;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 14px;
+}
+
+.type {
+  font-weight: 700;
+}
+
+.room {
+  color: var(--color-text-secondary);
+}
+
+.note {
+  color: var(--color-text-muted);
+}
+

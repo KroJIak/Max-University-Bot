@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from core.database import get_db
 from services.university_scraper import UniversityScraper
 from repositories.session_cookies_repository import SessionCookiesRepository
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, Dict
 import json
 
@@ -11,98 +11,312 @@ router = APIRouter()
 
 
 class LoginRequest(BaseModel):
-    """Запрос на логин студента"""
-    student_email: EmailStr
-    password: str
+    """Запрос на логин студента на сайте университета
+    
+    Выполняет логин на обоих сайтах университета (tt.chuvsu.ru и lk.chuvsu.ru)
+    и сохраняет cookies сессии в БД.
+    """
+    student_email: EmailStr = Field(..., description="Email студента для входа на сайт университета", example="student@university.ru")
+    password: str = Field(..., description="Пароль студента для входа на сайт университета", example="password123")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "student_email": "student@university.ru",
+                "password": "password123"
+            }
+        }
 
 
 class LoginResponse(BaseModel):
-    """Ответ на запрос логина"""
-    success: bool
-    cookies_by_domain: Optional[Dict[str, Optional[str]]] = None  # {"tt.chuvsu.ru": "...", "lk.chuvsu.ru": "..."}
-    error: Optional[str] = None
+    """Ответ на запрос логина студента
+    
+    Содержит результат попытки логина. Cookies сессии сохраняются в БД и не возвращаются в ответе.
+    """
+    success: bool = Field(..., description="Успешность операции логина", example=True)
+    error: Optional[str] = Field(None, description="Сообщение об ошибке (если есть)", example=None)
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "success": True,
+                "error": None
+            }
+        }
 
 
 class TeachersRequest(BaseModel):
-    """Запрос на получение списка преподавателей"""
-    student_email: EmailStr
+    """Запрос на получение списка преподавателей
+    
+    Получает список всех преподавателей университета для студента.
+    """
+    student_email: EmailStr = Field(..., description="Email студента", example="student@university.ru")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "student_email": "student@university.ru"
+            }
+        }
 
 
 class TeachersResponse(BaseModel):
-    """Ответ со списком преподавателей"""
-    success: bool
-    teachers: Optional[list] = None  # Список преподавателей: [{"id": "tech0001", "name": "ФИО"}, ...]
-    error: Optional[str] = None
+    """Ответ со списком преподавателей
+    
+    Содержит список всех преподавателей университета с их ID и ФИО.
+    """
+    success: bool = Field(..., description="Успешность операции", example=True)
+    teachers: Optional[list] = Field(None, description="Список преподавателей: [{\"id\": \"tech0001\", \"name\": \"ФИО\"}, ...]", example=[{"id": "tech0001", "name": "Иванов Иван Иванович"}, {"id": "tech0002", "name": "Петров Петр Петрович"}])
+    error: Optional[str] = Field(None, description="Сообщение об ошибке (если есть)", example=None)
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "success": True,
+                "teachers": [
+                    {"id": "tech0001", "name": "Иванов Иван Иванович"},
+                    {"id": "tech0002", "name": "Петров Петр Петрович"}
+                ],
+                "error": None
+            }
+        }
 
 
 class PersonalDataRequest(BaseModel):
-    """Запрос на получение данных студента"""
-    student_email: EmailStr
+    """Запрос на получение данных студента
+    
+    Получает структурированные данные студента с личного кабинета университета.
+    """
+    student_email: EmailStr = Field(..., description="Email студента", example="student@university.ru")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "student_email": "student@university.ru"
+            }
+        }
 
 
 class PersonalDataResponse(BaseModel):
-    """Ответ с данными студента"""
-    success: bool
-    data: Optional[Dict[str, Optional[str]]] = None  # Структурированные данные студента
-    error: Optional[str] = None
+    """Ответ с данными студента
+    
+    Содержит структурированные данные студента с личного кабинета университета.
+    """
+    success: bool = Field(..., description="Успешность операции", example=True)
+    data: Optional[Dict[str, Optional[str]]] = Field(None, description="Структурированные данные студента (ФИО, группа, курс, фото и т.д.)", example={"full_name": "Иванов Иван Иванович", "group": "ИВТ-21-01", "course": "3", "photo": "data:image/jpeg;base64,..."})
+    error: Optional[str] = Field(None, description="Сообщение об ошибке (если есть)", example=None)
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "success": True,
+                "data": {
+                    "full_name": "Иванов Иван Иванович",
+                    "group": "ИВТ-21-01",
+                    "course": "3",
+                    "photo": "data:image/jpeg;base64,..."
+                },
+                "error": None
+            }
+        }
 
 
 class TeacherInfoRequest(BaseModel):
-    """Запрос на получение информации о преподавателе"""
-    student_email: EmailStr
-    teacher_id: str  # ID преподавателя (номер после "tech", например "0000" или "2173")
+    """Запрос на получение информации о преподавателе
+    
+    Получает информацию о конкретном преподавателе (кафедры, фото).
+    """
+    student_email: EmailStr = Field(..., description="Email студента", example="student@university.ru")
+    teacher_id: str = Field(..., description="ID преподавателя (номер после \"tech\", например \"0000\" или \"2173\")", example="2173")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "student_email": "student@university.ru",
+                "teacher_id": "2173"
+            }
+        }
 
 
 class TeacherInfoResponse(BaseModel):
-    """Ответ с информацией о преподавателе"""
-    success: bool
-    departments: Optional[list] = None  # Список кафедр
-    photo: Optional[str] = None  # Фото в формате base64 data URI
-    error: Optional[str] = None
+    """Ответ с информацией о преподавателе
+    
+    Содержит информацию о кафедрах преподавателя и его фото.
+    """
+    success: bool = Field(..., description="Успешность операции", example=True)
+    departments: Optional[list] = Field(None, description="Список кафедр преподавателя", example=["Кафедра информатики", "Кафедра программирования"])
+    photo: Optional[str] = Field(None, description="Фото преподавателя в формате base64 data URI", example="data:image/jpeg;base64,...")
+    error: Optional[str] = Field(None, description="Сообщение об ошибке (если есть)", example=None)
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "success": True,
+                "departments": ["Кафедра информатики", "Кафедра программирования"],
+                "photo": "data:image/jpeg;base64,...",
+                "error": None
+            }
+        }
 
 
 class ScheduleRequest(BaseModel):
-    """Запрос на получение расписания"""
-    student_email: EmailStr
-    week: int = 1  # 1 = текущая неделя, 2 = следующая неделя
+    """Запрос на получение расписания студента
+    
+    Получает расписание занятий студента на текущую или следующую неделю.
+    """
+    student_email: EmailStr = Field(..., description="Email студента", example="student@university.ru")
+    week: int = Field(1, description="Номер недели (1 = текущая неделя, 2 = следующая неделя)", example=1)
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "student_email": "student@university.ru",
+                "week": 1
+            }
+        }
 
 
 class ScheduleResponse(BaseModel):
-    """Ответ с расписанием"""
-    success: bool
-    schedule: Optional[list] = None  # Список занятий
-    error: Optional[str] = None
+    """Ответ с расписанием студента
+    
+    Содержит список занятий студента на текущую или следующую неделю.
+    """
+    success: bool = Field(..., description="Успешность операции", example=True)
+    schedule: Optional[list] = Field(None, description="Список занятий: [{\"date\": \"2024-01-15\", \"time_start\": \"09:00\", \"time_end\": \"10:30\", \"subject\": \"Математика\", \"type\": \"Лекция\", \"teacher\": \"Иванов И.И.\", \"room\": \"101\"}, ...]", example=[{"date": "2024-01-15", "time_start": "09:00", "time_end": "10:30", "subject": "Математика", "type": "Лекция", "teacher": "Иванов И.И.", "room": "101"}])
+    error: Optional[str] = Field(None, description="Сообщение об ошибке (если есть)", example=None)
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "success": True,
+                "schedule": [
+                    {
+                        "date": "2024-01-15",
+                        "time_start": "09:00",
+                        "time_end": "10:30",
+                        "subject": "Математика",
+                        "type": "Лекция",
+                        "teacher": "Иванов И.И.",
+                        "room": "101"
+                    }
+                ],
+                "error": None
+            }
+        }
 
 
 class ContactsRequest(BaseModel):
-    """Запрос на получение контактов"""
-    student_email: EmailStr
+    """Запрос на получение контактов деканатов и кафедр
+    
+    Получает контактную информацию деканатов факультетов и кафедр.
+    """
+    student_email: EmailStr = Field(..., description="Email студента", example="student@university.ru")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "student_email": "student@university.ru"
+            }
+        }
 
 
 class ContactsResponse(BaseModel):
-    """Ответ с контактами деканатов и кафедр"""
-    success: bool
-    deans: Optional[list] = None  # Список деканатов
-    departments: Optional[list] = None  # Список кафедр
-    error: Optional[str] = None
+    """Ответ с контактами деканатов и кафедр
+    
+    Содержит контактную информацию деканатов факультетов и кафедр.
+    """
+    success: bool = Field(..., description="Успешность операции", example=True)
+    deans: Optional[list] = Field(None, description="Список деканатов: [{\"faculty\": \"Факультет информатики\", \"phone\": \"+7 (123) 456-78-90\", \"email\": \"dean@university.ru\"}, ...]", example=[{"faculty": "Факультет информатики", "phone": "+7 (123) 456-78-90", "email": "dean@university.ru"}])
+    departments: Optional[list] = Field(None, description="Список кафедр: [{\"faculty\": \"Факультет информатики\", \"department\": \"Кафедра программирования\", \"phones\": \"+7 (123) 456-78-90\", \"email\": \"dept@university.ru\"}, ...]", example=[{"faculty": "Факультет информатики", "department": "Кафедра программирования", "phones": "+7 (123) 456-78-90", "email": "dept@university.ru"}])
+    error: Optional[str] = Field(None, description="Сообщение об ошибке (если есть)", example=None)
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "success": True,
+                "deans": [
+                    {"faculty": "Факультет информатики", "phone": "+7 (123) 456-78-90", "email": "dean@university.ru"}
+                ],
+                "departments": [
+                    {"faculty": "Факультет информатики", "department": "Кафедра программирования", "phones": "+7 (123) 456-78-90", "email": "dept@university.ru"}
+                ],
+                "error": None
+            }
+        }
 
 
 class PlatformsResponse(BaseModel):
-    """Ответ со списком полезных веб-платформ"""
-    success: bool
-    platforms: Optional[list] = None  # Список платформ: [{"key": "...", "name": "...", "url": "..."}, ...]
-    error: Optional[str] = None
+    """Ответ со списком полезных веб-платформ
+    
+    Содержит список полезных веб-платформ университета для студентов.
+    """
+    success: bool = Field(..., description="Успешность операции", example=True)
+    platforms: Optional[list] = Field(None, description="Список платформ: [{\"key\": \"moodle\", \"name\": \"Moodle\", \"url\": \"https://moodle.university.ru\", \"emoji\": \"📚\"}, ...]", example=[{"key": "requests", "name": "Запросы и справки", "url": "https://lk.chuvsu.ru/student/request.php", "emoji": "📋"}, {"key": "practice", "name": "Практика", "url": "https://lk.chuvsu.ru/student/practic.php", "emoji": "💼"}])
+    error: Optional[str] = Field(None, description="Сообщение об ошибке (если есть)", example=None)
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "success": True,
+                "platforms": [
+                    {"key": "requests", "name": "Запросы и справки", "url": "https://lk.chuvsu.ru/student/request.php", "emoji": "📋"},
+                    {"key": "practice", "name": "Практика", "url": "https://lk.chuvsu.ru/student/practic.php", "emoji": "💼"}
+                ],
+                "error": None
+            }
+        }
 
 
-@router.post("/login", response_model=LoginResponse)
+@router.post(
+    "/login",
+    response_model=LoginResponse,
+    summary="Логин студента",
+    description="Выполняет логин на обоих сайтах университета (tt.chuvsu.ru и lk.chuvsu.ru) и сохраняет cookies сессии в БД. Cookies не возвращаются в ответе - они используются только внутри University API для последующих запросов. При успешном логине возвращает только success=true, при ошибке - HTTP 401.",
+    response_description="Результат операции логина (success/error). Cookies сохраняются в БД и не возвращаются.",
+    responses={
+        200: {"description": "Логин успешен. Возвращает только success=true. Cookies сохраняются в БД и не возвращаются."},
+        401: {"description": "Неверный email или пароль"}
+    }
+)
 async def login_student(
     request: LoginRequest,
     db: Session = Depends(get_db)
 ):
-    """
-    Выполнить логин на обоих сайтах университета (tt.chuvsu.ru и lk.chuvsu.ru)
+    """Выполнить логин студента на сайте университета
     
-    Сохраняет cookies сессии по доменам в БД, связанные с student_email
+    Выполняет логин на обоих сайтах университета (tt.chuvsu.ru и lk.chuvsu.ru)
+    и сохраняет cookies сессии по доменам в БД, связанные с student_email.
+    Cookies не возвращаются в ответе - они используются только внутри University API
+    для последующих запросов (получение данных студента, расписания и т.д.).
+    
+    **Параметры:**
+    - `student_email`: Email студента для входа на сайт университета
+    - `password`: Пароль студента для входа на сайт университета
+    
+    **Возвращает:**
+    - `success`: Успешность операции логина (true/false)
+    - `error`: Сообщение об ошибке (если есть)
+    
+    **Примечание:**
+    Cookies автоматически сохраняются в БД и используются для последующих запросов.
+    Они не возвращаются в ответе для безопасности.
+    
+    **Примеры использования:**
+    
+    ```python
+    import requests
+    
+    response = requests.post(
+        "http://localhost:8002/students/login",
+        json={
+            "student_email": "student@university.ru",
+            "password": "password123"
+        }
+    )
+    
+    # Ответ: {"success": True, "error": None}
+    # Cookies сохраняются в БД и не возвращаются
+    ```
     """
     scraper = UniversityScraper()
     cookies_repo = SessionCookiesRepository(db)
@@ -110,33 +324,60 @@ async def login_student(
     login_result = scraper.login_both_sites(request.student_email, request.password)
     
     if not login_result["success"]:
+        # Возвращаем ошибку логина с HTTP 401
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=login_result.get("error", "Неверный email или пароль")
         )
     
-    # Сохраняем cookies в БД
+    # Сохраняем cookies в БД (но не возвращаем их в ответе)
     cookies_by_domain = login_result.get("cookies_by_domain", {})
     cookies_json = json.dumps(cookies_by_domain)
     cookies_repo.create_or_update(request.student_email, cookies_json)
     
+    # Возвращаем только success - cookies не возвращаем
     return LoginResponse(
         success=True,
-        cookies_by_domain=cookies_by_domain,
         error=None
     )
 
 
-@router.post("/teachers", response_model=TeachersResponse)
+@router.post(
+    "/teachers",
+    response_model=TeachersResponse,
+    summary="Получить список преподавателей",
+    description="Получает список всех преподавателей университета для студента. Использует сохраненные cookies сессии из БД.",
+    response_description="Список преподавателей с их ID и ФИО",
+    responses={
+        200: {"description": "Список преподавателей успешно получен"},
+        401: {"description": "Сессия истекла или не найдена"},
+        404: {"description": "Cookies не найдены (необходимо сначала выполнить логин)"}
+    }
+)
 async def get_teachers(
     request: TeachersRequest,
     db: Session = Depends(get_db)
 ):
-    """
-    Получить список преподавателей
+    """Получить список преподавателей
     
-    Получает cookies из БД по student_email и использует cookies для tt.chuvsu.ru
-    Парсит страницу https://tt.chuvsu.ru/index/tech и возвращает список преподавателей
+    Получает список всех преподавателей университета для студента.
+    Использует сохраненные cookies сессии из БД для доступа к сайту университета.
+    
+    **Параметры:**
+    - `student_email`: Email студента
+    
+    **Примеры использования:**
+    
+    ```python
+    import requests
+    
+    response = requests.post(
+        "http://localhost:8002/students/teachers",
+        json={
+            "student_email": "student@university.ru"
+        }
+    )
+    ```
     """
     scraper = UniversityScraper()
     cookies_repo = SessionCookiesRepository(db)
@@ -182,16 +423,43 @@ async def get_teachers(
     )
 
 
-@router.post("/personal_data", response_model=PersonalDataResponse)
+@router.post(
+    "/personal_data",
+    response_model=PersonalDataResponse,
+    summary="Получить данные студента",
+    description="Получает структурированные данные студента с личного кабинета университета (ФИО, группа, курс, фото и т.д.). Использует сохраненные cookies сессии из БД.",
+    response_description="Структурированные данные студента",
+    responses={
+        200: {"description": "Данные студента успешно получены"},
+        401: {"description": "Сессия истекла или не найдена"},
+        404: {"description": "Cookies не найдены (необходимо сначала выполнить логин)"}
+    }
+)
 async def get_student_personal_data(
     request: PersonalDataRequest,
     db: Session = Depends(get_db)
 ):
-    """
-    Получить данные студента с https://lk.chuvsu.ru/student/personal_data.php
+    """Получить данные студента
     
-    Получает cookies из БД по student_email и использует cookies для lk.chuvsu.ru
-    Если cookies для lk.chuvsu.ru нет, пробует использовать cookies от tt.chuvsu.ru
+    Получает структурированные данные студента с личного кабинета университета
+    (ФИО, группа, курс, фото и т.д.).
+    Использует сохраненные cookies сессии из БД для доступа к сайту университета.
+    
+    **Параметры:**
+    - `student_email`: Email студента
+    
+    **Примеры использования:**
+    
+    ```python
+    import requests
+    
+    response = requests.post(
+        "http://localhost:8002/students/personal_data",
+        json={
+            "student_email": "student@university.ru"
+        }
+    )
+    ```
     """
     scraper = UniversityScraper()
     cookies_repo = SessionCookiesRepository(db)
@@ -240,16 +508,44 @@ async def get_student_personal_data(
     )
 
 
-@router.post("/teacher_info", response_model=TeacherInfoResponse)
+@router.post(
+    "/teacher_info",
+    response_model=TeacherInfoResponse,
+    summary="Получить информацию о преподавателе",
+    description="Получает информацию о конкретном преподавателе (кафедры, фото). Использует сохраненные cookies сессии из БД.",
+    response_description="Информация о преподавателе (кафедры и фото)",
+    responses={
+        200: {"description": "Информация о преподавателе успешно получена"},
+        401: {"description": "Сессия истекла или не найдена"},
+        404: {"description": "Cookies не найдены (необходимо сначала выполнить логин)"}
+    }
+)
 async def get_teacher_info(
     request: TeacherInfoRequest,
     db: Session = Depends(get_db)
 ):
-    """
-    Получить информацию о преподавателе со страницы https://tt.chuvsu.ru/index/techtt/tech/{teacher_id}
+    """Получить информацию о преподавателе
     
-    Получает cookies из БД по student_email и использует cookies для tt.chuvsu.ru
-    Извлекает кафедры и фото преподавателя
+    Получает информацию о конкретном преподавателе (кафедры, фото).
+    Использует сохраненные cookies сессии из БД для доступа к сайту университета.
+    
+    **Параметры:**
+    - `student_email`: Email студента
+    - `teacher_id`: ID преподавателя (номер после "tech", например "0000" или "2173")
+    
+    **Примеры использования:**
+    
+    ```python
+    import requests
+    
+    response = requests.post(
+        "http://localhost:8002/students/teacher_info",
+        json={
+            "student_email": "student@university.ru",
+            "teacher_id": "2173"
+        }
+    )
+    ```
     """
     scraper = UniversityScraper()
     cookies_repo = SessionCookiesRepository(db)
@@ -301,16 +597,54 @@ async def get_teacher_info(
     )
 
 
-@router.post("/schedule", response_model=ScheduleResponse)
+@router.post(
+    "/schedule",
+    response_model=ScheduleResponse,
+    summary="Получить расписание студента",
+    description="Получает расписание занятий студента на текущую или следующую неделю. Использует сохраненные cookies сессии из БД.",
+    response_description="Расписание занятий студента",
+    responses={
+        200: {"description": "Расписание успешно получено"},
+        401: {"description": "Сессия истекла или не найдена"},
+        404: {"description": "Cookies не найдены (необходимо сначала выполнить логин)"}
+    }
+)
 async def get_schedule(
     request: ScheduleRequest,
     db: Session = Depends(get_db)
 ):
-    """
-    Получить расписание со страницы https://lk.chuvsu.ru/student/tt.php
+    """Получить расписание студента
     
-    Получает cookies из БД по student_email и использует cookies для lk.chuvsu.ru
-    Парсит HTML таблицу и возвращает структурированное расписание
+    Получает расписание занятий студента на текущую или следующую неделю.
+    Использует сохраненные cookies сессии из БД для доступа к сайту университета.
+    
+    **Параметры:**
+    - `student_email`: Email студента
+    - `week`: Номер недели (1 = текущая неделя, 2 = следующая неделя, по умолчанию: 1)
+    
+    **Примеры использования:**
+    
+    ```python
+    import requests
+    
+    # Получить расписание на текущую неделю
+    response = requests.post(
+        "http://localhost:8002/students/schedule",
+        json={
+            "student_email": "student@university.ru",
+            "week": 1
+        }
+    )
+    
+    # Получить расписание на следующую неделю
+    response = requests.post(
+        "http://localhost:8002/students/schedule",
+        json={
+            "student_email": "student@university.ru",
+            "week": 2
+        }
+    )
+    ```
     """
     scraper = UniversityScraper()
     cookies_repo = SessionCookiesRepository(db)
@@ -359,16 +693,42 @@ async def get_schedule(
     )
 
 
-@router.post("/contacts", response_model=ContactsResponse)
+@router.post(
+    "/contacts",
+    response_model=ContactsResponse,
+    summary="Получить контакты деканатов и кафедр",
+    description="Получает контактную информацию деканатов факультетов и кафедр. Использует сохраненные cookies сессии из БД.",
+    response_description="Контакты деканатов и кафедр",
+    responses={
+        200: {"description": "Контакты успешно получены"},
+        401: {"description": "Сессия истекла или не найдена"},
+        404: {"description": "Cookies не найдены (необходимо сначала выполнить логин)"}
+    }
+)
 async def get_contacts(
     request: ContactsRequest,
     db: Session = Depends(get_db)
 ):
-    """
-    Получить контакты деканатов и кафедр со страницы https://lk.chuvsu.ru/student/contacts.php
+    """Получить контакты деканатов и кафедр
     
-    Получает cookies из БД по student_email и использует cookies для lk.chuvsu.ru
-    Парсит HTML страницу и возвращает структурированные контакты
+    Получает контактную информацию деканатов факультетов и кафедр.
+    Использует сохраненные cookies сессии из БД для доступа к сайту университета.
+    
+    **Параметры:**
+    - `student_email`: Email студента
+    
+    **Примеры использования:**
+    
+    ```python
+    import requests
+    
+    response = requests.post(
+        "http://localhost:8002/students/contacts",
+        json={
+            "student_email": "student@university.ru"
+        }
+    )
+    ```
     """
     scraper = UniversityScraper()
     cookies_repo = SessionCookiesRepository(db)
@@ -418,38 +778,145 @@ async def get_contacts(
     )
 
 
-@router.get("/platforms", response_model=PlatformsResponse)
+@router.get(
+    "/platforms",
+    response_model=PlatformsResponse,
+    summary="Получить список веб-платформ",
+    description="Получает список полезных веб-платформ университета для студентов. Возвращает статический список платформ.",
+    response_description="Список полезных веб-платформ",
+    responses={
+        200: {"description": "Список платформ успешно получен"}
+    }
+)
 async def get_platforms():
-    """
-    Получить список полезных веб-платформ
+    """Получить список полезных веб-платформ
     
-    Возвращает статический список платформ с ключами, названиями и ссылками
+    Получает список полезных веб-платформ университета для студентов.
+    Возвращает статический список платформ с ключами, названиями и ссылками.
+    Не требует аутентификации.
+    
+    **Примеры использования:**
+    
+    ```python
+    import requests
+    
+    response = requests.get("http://localhost:8002/students/platforms")
+    ```
     """
     platforms = [
         {
             "key": "requests",
             "name": "Запросы и справки",
-            "url": "https://lk.chuvsu.ru/student/request.php"
+            "url": "https://lk.chuvsu.ru/student/request.php",
+            "emoji": "📋"
         },
         {
             "key": "practice",
             "name": "Практика",
-            "url": "https://lk.chuvsu.ru/student/practic.php"
+            "url": "https://lk.chuvsu.ru/student/practic.php",
+            "emoji": "💼"
         },
         {
             "key": "portfolio",
             "name": "Зачетная книжка",
-            "url": "https://lk.chuvsu.ru/portfolio/index.php"
+            "url": "https://lk.chuvsu.ru/portfolio/index.php",
+            "emoji": "📖"
         },
         {
             "key": "links",
             "name": "Полезные ссылки",
-            "url": "https://lk.chuvsu.ru/student/links.php"
+            "url": "https://lk.chuvsu.ru/student/links.php",
+            "emoji": "🔗"
         }
     ]
     
     return PlatformsResponse(
         success=True,
         platforms=platforms,
+        error=None
+    )
+
+
+class ServicesResponse(BaseModel):
+    """Ответ со списком сервисов
+    
+    Содержит список сервисов университета для студентов (не веб-платформы).
+    """
+    success: bool = Field(..., description="Успешность операции", example=True)
+    services: Optional[list] = Field(None, description="Список сервисов: [{\"key\": \"schedule\", \"name\": \"Расписание\", \"emoji\": \"📅\"}, ...]", example=[{"key": "schedule", "name": "Расписание", "emoji": "📅"}, {"key": "teachers", "name": "Преподаватели", "emoji": "👨‍🏫"}])
+    error: Optional[str] = Field(None, description="Сообщение об ошибке (если есть)", example=None)
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "success": True,
+                "services": [
+                    {"key": "schedule", "name": "Расписание", "emoji": "📅"},
+                    {"key": "teachers", "name": "Преподаватели", "emoji": "👨‍🏫"},
+                    {"key": "map", "name": "Карта", "emoji": "🗺️"},
+                    {"key": "contacts", "name": "Контакты", "emoji": "📞"},
+                    {"key": "chats", "name": "Чаты", "emoji": "💬"}
+                ],
+                "error": None
+            }
+        }
+
+
+@router.get(
+    "/services",
+    response_model=ServicesResponse,
+    summary="Получить список сервисов",
+    description="Получает список сервисов университета для студентов (не веб-платформы). Возвращает статический список сервисов с названиями и эмодзи.",
+    response_description="Список сервисов",
+    responses={
+        200: {"description": "Список сервисов успешно получен"}
+    }
+)
+async def get_services():
+    """Получить список сервисов
+    
+    Получает список сервисов университета для студентов (не веб-платформы).
+    Возвращает статический список сервисов с названиями и эмодзи.
+    Не требует аутентификации.
+    
+    **Примеры использования:**
+    
+    ```python
+    import requests
+    
+    response = requests.get("http://localhost:8002/students/services")
+    ```
+    """
+    services = [
+        {
+            "key": "schedule",
+            "name": "Расписание",
+            "emoji": "📅"
+        },
+        {
+            "key": "teachers",
+            "name": "Преподаватели",
+            "emoji": "👨‍🏫"
+        },
+        {
+            "key": "map",
+            "name": "Карта",
+            "emoji": "🗺️"
+        },
+        {
+            "key": "contacts",
+            "name": "Контакты",
+            "emoji": "📞"
+        },
+        {
+            "key": "chats",
+            "name": "Чаты",
+            "emoji": "💬"
+        }
+    ]
+    
+    return ServicesResponse(
+        success=True,
+        services=services,
         error=None
     )

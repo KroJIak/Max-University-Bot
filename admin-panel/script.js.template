@@ -133,22 +133,152 @@ const FEATURES = [
     ...FEATURES_BY_CATEGORY.additional
 ];
 
+const UNIVERSITY_STORAGE_KEY = 'selected_university_id';
+const AUTH_TOKEN_KEY = 'university_auth_token';
+let currentUniversityId = null;
+
+// Функция для получения токена из localStorage
+function getAuthToken() {
+    return localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+// Функция для выполнения запросов с токеном авторизации
+async function fetchWithAuth(url, options = {}) {
+    const token = getAuthToken();
+    
+    // Добавляем токен в заголовки, если он есть
+    if (token) {
+        if (!options.headers) {
+            options.headers = {};
+        }
+        options.headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    // Добавляем Content-Type, если его нет и есть тело запроса
+    if (options.body && !options.headers['Content-Type']) {
+        if (!options.headers) {
+            options.headers = {};
+        }
+        options.headers['Content-Type'] = 'application/json';
+    }
+    
+    try {
+        const response = await fetchWithFallback(url, options);
+        
+        // Если получили 401 (Unauthorized), очищаем токен и редиректим на login
+        if (response.status === 401 || response.status === 403) {
+            console.error('Ошибка аутентификации:', response.status);
+            localStorage.removeItem(AUTH_TOKEN_KEY);
+            localStorage.removeItem(UNIVERSITY_STORAGE_KEY);
+            window.location.href = 'login.html';
+            throw new Error('Требуется повторная аутентификация');
+        }
+        
+        return response;
+    } catch (error) {
+        // Если ошибка связана с аутентификацией, редиректим на login
+        if (error.message && error.message.includes('аутентификац')) {
+            localStorage.removeItem(AUTH_TOKEN_KEY);
+            localStorage.removeItem(UNIVERSITY_STORAGE_KEY);
+            window.location.href = 'login.html';
+        }
+        throw error;
+    }
+}
 let currentConfig = {
     university_api_base_url: '',
     endpoints: {}
 };
 
+// Получение university_id из URL или localStorage
+function getUniversityId() {
+    // Проверяем, есть ли токен аутентификации
+    const token = getAuthToken();
+    if (!token) {
+        // Если токена нет, перенаправляем на страницу логина
+        console.log('Токен аутентификации не найден, перенаправление на login.html');
+        window.location.href = 'login.html';
+        return null;
+    }
+    
+    // Сначала пробуем получить из URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const universityIdFromUrl = urlParams.get('university_id');
+    
+    if (universityIdFromUrl) {
+        // Сохраняем в localStorage
+        localStorage.setItem(UNIVERSITY_STORAGE_KEY, universityIdFromUrl);
+        return parseInt(universityIdFromUrl);
+    }
+    
+    // Если в URL нет, пробуем получить из localStorage
+    const universityIdFromStorage = localStorage.getItem(UNIVERSITY_STORAGE_KEY);
+    if (universityIdFromStorage) {
+        return parseInt(universityIdFromStorage);
+    }
+    
+    // Если нигде нет, перенаправляем на страницу логина
+    console.log('University ID не найден, перенаправление на login.html');
+    window.location.href = 'login.html';
+    return null;
+}
+
+// Загрузка информации о университете
+async function loadUniversityInfo() {
+    if (!currentUniversityId) {
+        return;
+    }
+    
+    try {
+        const response = await fetchWithFallback(`${API_BASE_URL}/universities/${currentUniversityId}`);
+        if (response.ok) {
+            const university = await response.json();
+            const universityNameEl = document.getElementById('university-name');
+            if (universityNameEl) {
+                universityNameEl.textContent = `Университет: ${university.name}`;
+            }
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки информации о университете:', error);
+    }
+}
+
 // Инициализация
 document.addEventListener('DOMContentLoaded', async () => {
+    // Получаем university_id
+    currentUniversityId = getUniversityId();
+    
+    if (!currentUniversityId) {
+        return; // Перенаправление на login.html
+    }
+    
+    await loadUniversityInfo();
     await loadConfig();
     renderFeatures();
     setupEventListeners();
+    
+    // Обработчик кнопки смены университета
+    const changeUniversityBtn = document.getElementById('change-university-btn');
+    if (changeUniversityBtn) {
+        changeUniversityBtn.addEventListener('click', () => {
+            // Очищаем токен аутентификации и university_id
+            localStorage.removeItem(UNIVERSITY_STORAGE_KEY);
+            localStorage.removeItem(AUTH_TOKEN_KEY);
+            localStorage.removeItem('university_name');
+            console.log('Токен и данные университета очищены, перенаправление на login.html');
+            window.location.href = 'login.html';
+        });
+    }
 });
 
 // Загрузка конфигурации
 async function loadConfig() {
+    if (!currentUniversityId) {
+        return;
+    }
+    
     try {
-        const response = await fetchWithFallback(`${API_BASE_URL}/config/university`);
+        const response = await fetchWithAuth(`${API_BASE_URL}/config/university/${currentUniversityId}`);
         if (response.ok) {
             const data = await response.json();
             currentConfig = {
@@ -171,6 +301,11 @@ async function loadConfig() {
 
 // Сохранение конфигурации
 async function saveConfig() {
+    if (!currentUniversityId) {
+        showStatus('Университет не выбран', 'error');
+        return;
+    }
+    
     const apiUrl = document.getElementById('university-api-url').value.trim();
     
     if (!apiUrl) {
@@ -179,12 +314,10 @@ async function saveConfig() {
     }
 
     try {
-        const response = await fetchWithFallback(`${API_BASE_URL}/config/university`, {
+        const response = await fetchWithAuth(`${API_BASE_URL}/config/university`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify({
+                university_id: currentUniversityId,
                 university_api_base_url: apiUrl,
                 endpoints: currentConfig.endpoints
             })

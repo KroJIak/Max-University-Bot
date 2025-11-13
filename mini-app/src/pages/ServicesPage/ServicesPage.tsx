@@ -1,60 +1,40 @@
+import { PlatformsSection, PrimaryServicesSection } from '@components/Services';
+import type { ServiceItem } from '@components/Services';
 import styles from './ServicesPage.module.scss';
 
-type ServiceItem = {
-  id: string;
-  title: string;
-  icon: string;
-};
-
-type ServiceSection = {
-  id: string;
-  title: string;
-  items: ServiceItem[];
-};
-
-const serviceSections: ServiceSection[] = [
-  {
-    id: 'primary',
-    title: 'Основные сервисы',
-    items: [
-      { id: 'schedule', title: 'Расписание', icon: '🗓️' },
-      { id: 'webinars', title: 'Вебинары', icon: '🎥' },
-      { id: 'teachers', title: 'Преподаватели', icon: '👩‍🏫' },
-      { id: 'requests', title: 'Справки и запросы', icon: '📝' },
-      { id: 'library', title: 'Библиотека', icon: '📚' },
-      { id: 'contacts', title: 'Контакты', icon: '☎️' },
-    ],
-  },
-  {
-    id: 'platforms',
-    title: 'Веб-платформы',
-    items: [
-      { id: 'courses', title: 'Мои курсы', icon: '✅' },
-      { id: 'portfolio', title: 'Моё портфолио', icon: '🗂️' },
-      { id: 'schedule', title: 'Моё расписание', icon: '📆' },
-      { id: 'paid', title: 'Платные услуги', icon: '💳' },
-    ],
-  },
+const primaryServices: ServiceItem[] = [
+  { id: 'schedule', title: 'Расписание', icon: '🗓️' },
+  { id: 'teachers', title: 'Преподаватели', icon: '👩‍🏫' },
+  { id: 'requests', title: 'Справки и запросы', icon: '📝' },
+  { id: 'contacts', title: 'Контакты', icon: '☎️' },
 ];
 
-export function ServicesPage() {
+const platformServices: ServiceItem[] = [
+  { id: 'courses', title: 'Курсы', icon: '✅' },
+  { id: 'portfolio', title: 'Портфолио', icon: '🗂️' },
+  { id: 'schedule', title: 'Расписание', icon: '📆' },
+  { id: 'paid', title: 'Услуги', icon: '💳' },
+];
+
+type ServicesPageProps = {
+  onOpenSchedule?: () => void;
+};
+
+export function ServicesPage({ onOpenSchedule }: ServicesPageProps) {
+  const handlePrimarySelect = (item: ServiceItem) => {
+    if (item.id === 'schedule') {
+      onOpenSchedule?.();
+    }
+  };
+
   return (
     <div className={styles.page}>
-      {serviceSections.map((section) => (
-        <section key={section.id} className={styles.section}>
-          <h2 className={styles.sectionTitle}>{section.title}</h2>
-          <div className={styles.grid}>
-            {section.items.map((item) => (
-              <button key={item.id} type="button" className={styles.card}>
-                <span className={styles.cardTitle}>{item.title}</span>
-                <span className={styles.cardIcon} aria-hidden="true">
-                  {item.icon}
-                </span>
-              </button>
-            ))}
-          </div>
-        </section>
-      ))}
+      <PrimaryServicesSection
+        title="Основные сервисы"
+        items={primaryServices}
+        onItemSelect={handlePrimarySelect}
+      />
+      <PlatformsSection title="Веб-платформы" items={platformServices} />
     </div>
   );
 }

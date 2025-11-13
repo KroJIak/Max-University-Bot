@@ -1,5 +1,5 @@
 import type { ScheduleItem } from '../../shared/types/schedule';
-import { ScheduleCard } from '@components/ScheduleSection/components/ScheduleCard';
+import { ScheduleCard } from '@components/ScheduleSection/ScheduleCard';
 import styles from './ScheduleDetail.module.scss';
 
 type ScheduleLessonsProps = {

@@ -9,8 +9,16 @@
 <body>
     <div class="container">
         <header>
-            <h1>⚙️ Админ панель университета</h1>
-            <p class="subtitle">Управление функционалом бота и API</p>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>⚙️ Админ панель университета</h1>
+                    <p class="subtitle">Управление функционалом бота и API</p>
+                    <p id="university-name" class="subtitle" style="margin-top: 5px; color: #666;"></p>
+                </div>
+                <button id="change-university-btn" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    Сменить университет
+                </button>
+            </div>
         </header>
 
         <div class="config-section">
@@ -48,6 +56,31 @@
         </div>
     </div>
 
+    <script>
+        // Проверка токена аутентификации перед загрузкой скрипта
+        (function() {
+            const authToken = localStorage.getItem('university_auth_token');
+            
+            // Если нет токена аутентификации, перенаправляем на login
+            if (!authToken) {
+                console.log('Токен аутентификации не найден, перенаправление на login.html');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Проверяем также наличие university_id
+            const urlParams = new URLSearchParams(window.location.search);
+            const universityIdFromUrl = urlParams.get('university_id');
+            const universityIdFromStorage = localStorage.getItem('selected_university_id');
+            
+            // Если нет university_id ни в URL, ни в localStorage, перенаправляем на login
+            if (!universityIdFromUrl && !universityIdFromStorage) {
+                console.log('University ID не найден, перенаправление на login.html');
+                window.location.href = 'login.html';
+                return;
+            }
+        })();
+    </script>
     <script src="script.js"></script>
 </body>
 </html>

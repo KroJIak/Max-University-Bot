@@ -1,0 +1,101 @@
+.section {
+  width: 100%;
+  padding: clamp(18px, 5vw, 26px);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-primary);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(18px, 3vw, 24px);
+  box-shadow: var(--shadow-elevated);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: clamp(20px, 4vw, 24px);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: 0.2px;
+}
+
+.moreButton {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--color-surface-soft);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.moreButton:hover {
+  transform: translateY(-2px);
+  color: var(--color-text-primary);
+  background: var(--color-surface-hover);
+}
+
+.moreIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(14px, 4vw, 18px);
+}
+
+.card {
+  border-radius: var(--radius-lg);
+  padding: clamp(20px, 5vw, 26px);
+  background: var(--color-surface-soft);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 150px;
+  height: 150px;
+  border: none;
+  color: var(--color-text-primary);
+  text-align: left;
+  cursor: pointer;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 20px 36px rgba(6, 9, 22, 0.38);
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 26px 42px rgba(5, 8, 20, 0.48);
+}
+
+.cardTitle {
+  font-size: clamp(16px, 3.4vw, 18px);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.cardIcon {
+  font-size: clamp(40px, 8vw, 56px);
+  line-height: 1;
+  align-self: flex-end;
+}
+
+@media (max-width: 360px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+}

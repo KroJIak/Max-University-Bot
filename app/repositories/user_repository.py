@@ -7,9 +7,10 @@ class UserRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def create(self, user_id: int, first_name: str, last_name: Optional[str] = None, username: Optional[str] = None) -> User:
+    def create(self, user_id: int, university_id: int, first_name: str, last_name: Optional[str] = None, username: Optional[str] = None) -> User:
         db_user = User(
             user_id=user_id,
+            university_id=university_id,
             first_name=first_name,
             last_name=last_name,
             username=username
@@ -31,7 +32,7 @@ class UserRepository:
     def exists(self, user_id: int) -> bool:
         return self.db.query(User).filter(User.user_id == user_id).first() is not None
 
-    def update(self, user_id: int, first_name: Optional[str] = None, last_name: Optional[str] = None, username: Optional[str] = None) -> Optional[User]:
+    def update(self, user_id: int, first_name: Optional[str] = None, last_name: Optional[str] = None, username: Optional[str] = None, university_id: Optional[int] = None) -> Optional[User]:
         """Обновить данные пользователя"""
         db_user = self.get_by_user_id(user_id)
         if not db_user:
@@ -43,6 +44,8 @@ class UserRepository:
             db_user.last_name = last_name
         if username is not None:
             db_user.username = username
+        if university_id is not None:
+            db_user.university_id = university_id
         
         self.db.commit()
         self.db.refresh(db_user)

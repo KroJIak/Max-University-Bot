@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react';
 
-import type { DayTab, ScheduleItem } from '../../shared/types/schedule';
 import { ArrowRightIcon } from '@components/icons';
-import { ScheduleCard } from './components/ScheduleCard';
-import { ScheduleTabs } from './components/ScheduleTabs';
+import { useSubgroup } from '@shared/state/subgroup';
+import { filterLessonsBySubgroup } from '@shared/utils/schedule';
+import type { DayTab, ScheduleItem } from '@shared/types/schedule';
+import { ScheduleCard } from './ScheduleCard';
+import { ScheduleTabs } from './ScheduleTabs';
 import styles from './ScheduleSection.module.scss';
 
 type ScheduleSectionProps = {
@@ -20,14 +22,16 @@ export function ScheduleSection({
   onOpenFullSchedule,
 }: ScheduleSectionProps) {
   const [activeTab, setActiveTab] = useState(() => tabs[0]?.id ?? '');
+  const { subgroup } = useSubgroup();
 
   const schedule = useMemo(() => {
     if (!activeTab) {
       return [];
     }
 
-    return scheduleByTab[activeTab] ?? [];
-  }, [activeTab, scheduleByTab]);
+    const lessons = scheduleByTab[activeTab] ?? [];
+    return filterLessonsBySubgroup(lessons, subgroup);
+  }, [activeTab, scheduleByTab, subgroup]);
 
   if (!tabs.length) {
     return null;

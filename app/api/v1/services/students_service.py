@@ -11,11 +11,12 @@ from fastapi import HTTPException, status
 logger = logging.getLogger(__name__)
 
 
-async def validate_university_api_config(db: Session, endpoint_key: str) -> Dict[str, Any]:
-    """Проверить и получить конфигурацию University API
+async def validate_university_api_config(db: Session, university_id: int, endpoint_key: str) -> Dict[str, Any]:
+    """Проверить и получить конфигурацию University API для конкретного университета
     
     Args:
         db: Сессия базы данных
+        university_id: ID университета
         endpoint_key: Ключ endpoint для проверки (например, "students_login")
     
     Returns:
@@ -24,11 +25,11 @@ async def validate_university_api_config(db: Session, endpoint_key: str) -> Dict
     Raises:
         HTTPException: Если конфигурация не найдена или endpoint выключен
     """
-    config = await get_university_config(db)
+    config = await get_university_config(db, university_id)
     if not config:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="University API не настроен"
+            detail=f"University API не настроен для университета {university_id}"
         )
     
     # Проверяем, включен ли endpoint (если endpoint отсутствует, считаем что он включен с дефолтным путем)

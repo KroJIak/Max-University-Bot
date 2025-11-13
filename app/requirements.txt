@@ -9,4 +9,7 @@ beautifulsoup4==4.12.2
 cryptography==41.0.7
 email-validator==2.1.0
 httpx==0.25.2
+bcrypt==4.1.2
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
 

@@ -15,12 +15,18 @@ type ProfileInfoSectionProps = {
 export const ProfileInfoSection: FC<ProfileInfoSectionProps> = ({ rows }) => {
   return (
     <section className={styles.card}>
-      {rows.map((row) => (
-        <div key={row.id} className={styles.row}>
-          <span className={styles.label}>{row.label}</span>
-          <span className={styles.value}>{row.value}</span>
-        </div>
-      ))}
+      <div className={styles.infoList}>
+        {rows.map((row, index) => (
+          <div
+            key={row.id}
+            className={styles.row}
+            data-last={index === rows.length - 1 ? 'true' : undefined}
+          >
+            <span className={styles.label}>{row.label}</span>
+            <span className={styles.value}>{row.value}</span>
+          </div>
+        ))}
+      </div>
     </section>
   );
 };
