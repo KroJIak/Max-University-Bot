@@ -5,13 +5,12 @@ import styles from './LoginPage.module.scss';
 type UniversityOption = {
   id: string;
   title: string;
-  subtitle: string;
 };
 
 const UNIVERSITY_OPTIONS: UniversityOption[] = [
-  { id: 'max', title: 'Макс Университет', subtitle: 'Личный кабинет MAX' },
-  { id: 'csu', title: 'Челябинский государственный университет', subtitle: 'Личный кабинет ЧГУ' },
-  { id: 'other', title: 'Другой ВУЗ', subtitle: 'Использовать общий вход' },
+  { id: 'max', title: 'Макс Университет' },
+  { id: 'csu', title: 'Челябинский государственный университет' },
+  { id: 'other', title: 'Другой ВУЗ' },
 ];
 
 type LoginPageProps = {
@@ -72,7 +71,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 onClick={() => setSelectedUniversity(option.id)}
               >
                 <div className={styles.universityTitle}>{option.title}</div>
-                <div className={styles.universitySubtitle}>{option.subtitle}</div>
               </button>
             );
           })}
@@ -109,10 +107,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 required
               />
             </div>
-
-            <p className={styles.hint}>
-              Вход выполняется через {selectedOption.title}. Используйте корпоративную почту и пароль.
-            </p>
 
             <button className={styles.submit} type="submit" disabled={!isFormReady || isSubmitting}>
               Войти в аккаунт
