@@ -942,7 +942,6 @@ func (p *PagesAPI) buildTeachersListPage(ctx context.Context, userID int64, lett
 		return text, keyboard
 	}
 
-
 	// Корректируем номер страницы
 	if page < 0 {
 		page = 0
@@ -971,7 +970,7 @@ func (p *PagesAPI) buildTeachersListPage(ctx context.Context, userID int64, lett
 		text += fmt.Sprintf("%d) %s\n", number, teacher.Name)
 	}
 
-	text += fmt.Sprintf("\n_Страница %d из %d_\n", page+1, totalPages)
+	text += fmt.Sprintf("\n_%d из %d_\n", page+1, totalPages)
 
 	// Создаем клавиатуру с кнопками преподавателей и пагинацией
 	keyboard := p.keyboards.TeachersListMenu(pageTeachers, letter, page, totalPages, p.webAppURL)
@@ -1077,7 +1076,7 @@ func (p *PagesAPI) buildMapsListPage(ctx context.Context, userID int64, page int
 		text += fmt.Sprintf("%d) %s\n", number, building.Name)
 	}
 
-	text += fmt.Sprintf("\n_Страница %d из %d_\n", page+1, totalPages)
+	text += fmt.Sprintf("\n_%d из %d_\n", page+1, totalPages)
 
 	// Создаем клавиатуру с кнопками корпусов и пагинацией
 	keyboard := p.keyboards.MapsListMenu(pageBuildings, page, totalPages, p.webAppURL)
