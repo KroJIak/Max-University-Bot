@@ -912,52 +912,8 @@ func formatDate(t time.Time) string {
 	return fmt.Sprintf("%s, %d %s %d", weekday, day, month, year)
 }
 
-// formatTeacherName форматирует имя преподавателя в формат "Фамилия И.О."
-func formatTeacherName(fullName string) string {
-	parts := []rune(fullName)
-	words := []string{}
-	currentWord := ""
-
-	for _, r := range parts {
-		if r == ' ' {
-			if currentWord != "" {
-				words = append(words, currentWord)
-				currentWord = ""
-			}
-		} else {
-			currentWord += string(r)
-		}
-	}
-	if currentWord != "" {
-		words = append(words, currentWord)
-	}
-
-	if len(words) == 0 {
-		return fullName
-	}
-
-	// Если есть хотя бы фамилия и имя
-	if len(words) >= 2 {
-		surname := words[0]
-		initials := ""
-		// Берем первые буквы всех остальных слов (имя, отчество)
-		for i := 1; i < len(words) && i < 4; i++ {
-			wordRunes := []rune(words[i])
-			if len(wordRunes) > 0 {
-				initials += string(wordRunes[0]) + "."
-			}
-		}
-		if initials != "" {
-			return fmt.Sprintf("%s %s", surname, initials)
-		}
-		return surname
-	}
-
-	return fullName
-}
-
 // buildTeachersAlphabetPage показывает алфавит для поиска преподавателей
-func (p *PagesAPI) buildTeachersAlphabetPage(ctx context.Context, userID int64) (string, *maxbot.Keyboard) {
+func (p *PagesAPI) buildTeachersAlphabetPage(_ context.Context, _ int64) (string, *maxbot.Keyboard) {
 	text := utils.FormatHeader("Преподаватели") + "\n\n"
 	text += "*Поиск преподавателя по ФИО:*\n"
 	text += "Пример: если надо найти Обломов Игорь Александрович, надо нажать на О\n"
@@ -1260,7 +1216,7 @@ func (p *PagesAPI) buildContactsPage(ctx context.Context, userID int64, page int
 
 	// Формируем текст
 	text := utils.FormatHeader("Контакты") + "\n\n"
-	text += fmt.Sprintf("*Контакты деканатов и кафедр*\n\n")
+	text += "*Контакты деканатов и кафедр*\n\n"
 
 	// Нумеруем контакты (номер учитывает страницу)
 	globalIndex := page * pageSize
@@ -1294,7 +1250,7 @@ func (p *PagesAPI) buildContactsPage(ctx context.Context, userID int64, page int
 }
 
 // buildChatsPage показывает страницу с чатами
-func (p *PagesAPI) buildChatsPage(ctx context.Context, userID int64) (string, *maxbot.Keyboard) {
+func (p *PagesAPI) buildChatsPage(_ context.Context, userID int64) (string, *maxbot.Keyboard) {
 	log.Printf("buildChatsPage called: userID=%d", userID)
 
 	// Используем статический список чатов из мини-апа
@@ -1363,8 +1319,8 @@ func (p *PagesAPI) buildChatsPage(ctx context.Context, userID int64) (string, *m
 }
 
 // buildClubsListPage показывает список клубов с пагинацией
-func (p *PagesAPI) buildClubsListPage(ctx context.Context, userID int64, page int) (string, *maxbot.Keyboard) {
-	log.Printf("buildClubsListPage called: userID=%d, page=%d", userID, page)
+func (p *PagesAPI) buildClubsListPage(_ context.Context, _ int64, page int) (string, *maxbot.Keyboard) {
+	log.Printf("buildClubsListPage called: page=%d", page)
 
 	// Используем статический список клубов из мини-апа
 	allClubs := []services.Club{
