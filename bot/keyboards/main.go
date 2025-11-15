@@ -361,6 +361,11 @@ func formatTeacherNameForButton(fullName string) string {
 func (b *Builder) TeacherInfoMenu(webAppURL string) *maxbot.Keyboard {
 	keyboard := b.api.Messages.NewKeyboardBuilder()
 
+	// Кнопка "Назад"
+	keyboard.
+		AddRow().
+		AddCallback("⬅️ Назад", schemes.DEFAULT, "open_services")
+
 	// Кнопки навигации: Главная, Сервисы, Профиль
 	navRow := keyboard.AddRow()
 	navRow.AddCallback("🏠 Главная", schemes.POSITIVE, "open_main")
@@ -391,6 +396,11 @@ func (b *Builder) TeachersAlphabetMenu(webAppURL string) *maxbot.Keyboard {
 			row.AddCallback(letter, schemes.POSITIVE, payload)
 		}
 	}
+
+	// Кнопка "Назад"
+	keyboard.
+		AddRow().
+		AddCallback("⬅️ Назад", schemes.DEFAULT, "open_services")
 
 	// Кнопки навигации: Главная, Сервисы, Профиль
 	navRow := keyboard.AddRow()
@@ -481,6 +491,11 @@ func (b *Builder) TeachersListMenu(teachers []services.Teacher, letter string, c
 	} else {
 		pageRow.AddCallback(">>|", schemes.DEFAULT, "disabled")
 	}
+
+	// Кнопка "Назад"
+	keyboard.
+		AddRow().
+		AddCallback("⬅️ Назад", schemes.DEFAULT, "service_teachers")
 
 	// Кнопки навигации: Главная, Сервисы, Профиль
 	navRow := keyboard.AddRow()

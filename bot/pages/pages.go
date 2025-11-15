@@ -398,6 +398,9 @@ func (p *PagesAPI) buildMainPageText(ctx context.Context, userID int64, activeTa
 		}
 	}
 
+	// Добавляем информацию о веб-приложении в конец
+	text += "\n\n__Расписание на месяц можно посмотреть в веб-приложении__\n"
+
 	keyboard := p.keyboards.MainPageMenu(todayWeekday, tomorrowWeekday, afterTomorrowWeekday, tab, p.webAppURL)
 	return text, keyboard
 }
@@ -567,6 +570,8 @@ func (p *PagesAPI) buildProfilePageText(ctx context.Context, userID int64) (stri
 		}
 	}
 
+	text += "-------Профиль-----------\n"
+
 	text += utils.FormatSeparator(width) + "\n"
 	if universityName != "" {
 		text += universityName + "\n"
@@ -686,40 +691,73 @@ func (p *PagesAPI) HandleCallback(ctx context.Context, callback schemes.Callback
 		return p.ShowAuthRequiredPage(ctx, userID)
 	}
 
+	// Проверяем, не является ли это disabled кнопкой
+	if callback.Payload == "disabled" {
+		log.Printf("Ignoring disabled button callback: payload=%s", callback.Payload)
+		// Просто отвечаем на callback без действий
+		answer := &schemes.CallbackAnswer{
+			Notification: "",
+		}
+		_, err := p.api.Messages.AnswerOnCallback(ctx, callback.CallbackID, answer)
+		return err
+	}
+
 	// Используем Payload для определения действия (CallbackID - это идентификатор клавиатуры)
 	action := types.NavigationAction(callback.Payload)
 
-	log.Printf("Processing callback: payload=%s, callback_id=%s", callback.Payload, callback.CallbackID)
+	log.Printf("Processing callback: payload=%s, callback_id=%s, action=%s", callback.Payload, callback.CallbackID, action)
+	log.Printf("ActionOpenMaps constant value: %s", types.ActionOpenMaps)
 
 	// Генерируем новый текст и клавиатуру в зависимости от действия
 	var newText string
 	var newKeyboard *maxbot.Keyboard
 
+	log.Printf("About to switch on action: %q, comparing with ActionOpenMaps: %q", action, types.ActionOpenMaps)
 	switch action {
 	case types.ActionOpenMain, types.ActionHome:
+		log.Printf("ActionOpenMain/Home matched")
 		newText, newKeyboard = p.buildMainPageText(ctx, userID, "today")
 	case types.ActionOpenServices:
+		log.Printf("ActionOpenServices matched")
 		newText, newKeyboard = p.buildServicesPageText(ctx, userID)
 	case types.ActionOpenProfile:
+		log.Printf("ActionOpenProfile matched")
 		newText, newKeyboard = p.buildProfilePageText(ctx, userID)
 	case types.ActionSubgroupFull:
+		log.Printf("ActionSubgroupFull matched")
 		services.SetSubgroupMode(userID, services.SubgroupModeFull)
 		newText, newKeyboard = p.buildProfilePageText(ctx, userID)
 	case types.ActionSubgroupGroup1:
+		log.Printf("ActionSubgroupGroup1 matched")
 		services.SetSubgroupMode(userID, services.SubgroupModeGroup1)
 		newText, newKeyboard = p.buildProfilePageText(ctx, userID)
 	case types.ActionSubgroupGroup2:
+		log.Printf("ActionSubgroupGroup2 matched")
 		services.SetSubgroupMode(userID, services.SubgroupModeGroup2)
 		newText, newKeyboard = p.buildProfilePageText(ctx, userID)
 	case types.ActionScheduleToday:
+		log.Printf("ActionScheduleToday matched")
 		newText, newKeyboard = p.buildMainPageText(ctx, userID, "today")
 	case types.ActionScheduleTomorrow:
+		log.Printf("ActionScheduleTomorrow matched")
 		newText, newKeyboard = p.buildMainPageText(ctx, userID, "tomorrow")
 	case types.ActionScheduleAfterTomorrow:
+		log.Printf("ActionScheduleAfterTomorrow matched")
 		newText, newKeyboard = p.buildMainPageText(ctx, userID, "afterTomorrow")
 	case types.ActionBack:
+		log.Printf("ActionBack matched")
 		newText, newKeyboard = p.buildMainPageText(ctx, userID, "today")
+	case types.ActionOpenMaps:
+		log.Printf("ActionOpenMaps matched - building maps list page")
+		newText, newKeyboard = p.buildMapsListPage(ctx, userID, 0)
+	case types.ActionOpenContacts:
+		log.Printf("ActionOpenContacts matched - building contacts page")
+		newText, newKeyboard = p.buildContactsPage(ctx, userID, 0)
+	case types.ActionOpenChats:
+		log.Printf("ActionOpenChats matched - building chats page")
+		newText, newKeyboard = p.buildChatsPage(ctx, userID)
 	default:
+		log.Printf("No switch case matched for action: %q, entering default block", action)
 		// Обработка декоративной кнопки веб-приложения
 		if callback.Payload == "web_app_info" {
 			// Просто показываем уведомление без изменения сообщения
@@ -774,21 +812,49 @@ func (p *PagesAPI) HandleCallback(ctx context.Context, callback schemes.Callback
 			// Формат: teacher_info_tech123
 			teacherID := payload[len("teacher_info_"):]
 			newText, newKeyboard, _ = p.buildTeacherInfoPage(ctx, userID, teacherID)
-		} else if payload == "service_maps" || payload == "open_maps" {
-			// Показываем список корпусов
+		} else if payload == "service_map" || payload == "service_maps" || payload == "open_maps" {
+			// Показываем список корпусов (для кнопки "Назад" из MapInfoMenu или кнопки из API)
+			log.Printf("Processing service_map/service_maps/open_maps callback, building maps list page")
 			newText, newKeyboard = p.buildMapsListPage(ctx, userID, 0)
+		} else if payload == "service_contact" || payload == "service_contacts" || payload == "open_contacts" {
+			// Показываем контакты (для кнопки из API)
+			log.Printf("Processing service_contact/service_contacts/open_contacts callback, building contacts page")
+			newText, newKeyboard = p.buildContactsPage(ctx, userID, 0)
+		} else if strings.HasPrefix(payload, "contacts_page_") {
+			// Формат: contacts_page_0 (номер страницы)
+			var page int
+			fmt.Sscanf(payload[len("contacts_page_"):], "%d", &page)
+			log.Printf("Processing contacts_page callback: page=%d", page)
+			newText, newKeyboard = p.buildContactsPage(ctx, userID, page)
 		} else if strings.HasPrefix(payload, "maps_page_") {
 			// Формат: maps_page_0 (номер страницы)
 			var page int
 			fmt.Sscanf(payload[len("maps_page_"):], "%d", &page)
+			log.Printf("Processing maps_page callback: page=%d", page)
 			newText, newKeyboard = p.buildMapsListPage(ctx, userID, page)
 		} else if strings.HasPrefix(payload, "map_info_") {
 			// Формат: map_info_0 (индекс корпуса)
 			var index int
 			fmt.Sscanf(payload[len("map_info_"):], "%d", &index)
+			log.Printf("Processing map_info callback: index=%d", index)
 			newText, newKeyboard = p.buildMapInfoPage(ctx, userID, index)
+		} else if payload == "service_chats" || payload == "service_chat" || payload == "open_chats" {
+			// Показываем чаты (для кнопки из API)
+			log.Printf("Processing service_chats/service_chat/open_chats callback, building chats page")
+			newText, newKeyboard = p.buildChatsPage(ctx, userID)
+		} else if payload == "service_clubs" || payload == "service_club" || payload == "open_clubs" {
+			// Показываем клубы (для кнопки из API)
+			log.Printf("Processing service_clubs/service_club/open_clubs callback, building clubs page")
+			newText, newKeyboard = p.buildClubsListPage(ctx, userID, 0)
+		} else if strings.HasPrefix(payload, "clubs_page_") {
+			// Формат: clubs_page_0 (номер страницы)
+			var page int
+			fmt.Sscanf(payload[len("clubs_page_"):], "%d", &page)
+			log.Printf("Processing clubs_page callback: page=%d", page)
+			newText, newKeyboard = p.buildClubsListPage(ctx, userID, page)
 		} else {
 			// Для остальных действий показываем главную страницу
+			log.Printf("Unknown payload '%s', showing main page", payload)
 			newText, newKeyboard = p.buildMainPageText(ctx, userID, "today")
 		}
 	}
@@ -1026,6 +1092,7 @@ func (p *PagesAPI) buildTeacherInfoPage(ctx context.Context, userID int64, teach
 
 // buildMapsListPage показывает список корпусов с пагинацией
 func (p *PagesAPI) buildMapsListPage(ctx context.Context, userID int64, page int) (string, *maxbot.Keyboard) {
+	log.Printf("buildMapsListPage called: userID=%d, page=%d", userID, page)
 	// Получаем список всех корпусов
 	mapsResp, err := p.universityAPI.GetMaps(ctx, userID)
 	if err != nil {
@@ -1036,6 +1103,7 @@ func (p *PagesAPI) buildMapsListPage(ctx context.Context, userID int64, page int
 		_, keyboard := p.buildMainPageText(ctx, userID, "today")
 		return text, keyboard
 	}
+	log.Printf("Successfully got maps: %d buildings", len(mapsResp.Buildings))
 
 	buildings := mapsResp.Buildings
 	if len(buildings) == 0 {
@@ -1117,4 +1185,321 @@ func (p *PagesAPI) buildMapInfoPage(ctx context.Context, userID int64, buildingI
 	keyboard := p.keyboards.MapInfoMenu(building, p.webAppURL)
 
 	return text, keyboard
+}
+
+// buildContactsPage показывает страницу с контактами деканатов и кафедр с пагинацией
+func (p *PagesAPI) buildContactsPage(ctx context.Context, userID int64, page int) (string, *maxbot.Keyboard) {
+	log.Printf("buildContactsPage called: userID=%d, page=%d", userID, page)
+	// Получаем контакты
+	contactsResp, err := p.universityAPI.GetContacts(ctx, userID)
+	if err != nil {
+		log.Printf("Failed to get contacts: %v", err)
+		text := utils.FormatHeader("Ошибка") + "\n\n"
+		text += "Не удалось загрузить контакты."
+		// Используем главное меню
+		_, keyboard := p.buildMainPageText(ctx, userID, "today")
+		return text, keyboard
+	}
+
+	log.Printf("Successfully got contacts: %d deans, %d departments", len(contactsResp.Deans), len(contactsResp.Departments))
+
+	// Объединяем деканаты и кафедры в один список для пагинации
+	var allContacts []keyboards.ContactItem
+
+	// Добавляем деканаты
+	for _, dean := range contactsResp.Deans {
+		allContacts = append(allContacts, keyboards.ContactItem{
+			Type:    "dean",
+			Faculty: dean.Faculty,
+			Phone:   dean.Phone,
+			Email:   dean.Email,
+		})
+	}
+
+	// Добавляем кафедры
+	for _, dept := range contactsResp.Departments {
+		email := ""
+		if dept.Email != nil {
+			email = *dept.Email
+		}
+		allContacts = append(allContacts, keyboards.ContactItem{
+			Type:       "department",
+			Faculty:    dept.Faculty,
+			Department: dept.Department,
+			Phone:      dept.Phones,
+			Email:      email,
+		})
+	}
+
+	if len(allContacts) == 0 {
+		text := utils.FormatHeader("Контакты") + "\n\n"
+		text += "Контакты не найдены."
+		keyboard := p.keyboards.ContactsListMenu([]keyboards.ContactItem{}, 0, 0, p.webAppURL)
+		return text, keyboard
+	}
+
+	// Пагинация: по 20 контактов на страницу
+	const pageSize = 20
+	totalPages := (len(allContacts) + pageSize - 1) / pageSize
+
+	// Корректируем номер страницы
+	if page < 0 {
+		page = 0
+	}
+	if page >= totalPages {
+		page = totalPages - 1
+	}
+
+	// Получаем контакты для текущей страницы
+	start := page * pageSize
+	end := start + pageSize
+	if end > len(allContacts) {
+		end = len(allContacts)
+	}
+	pageContacts := allContacts[start:end]
+
+	// Формируем текст
+	text := utils.FormatHeader("Контакты") + "\n\n"
+	text += fmt.Sprintf("*Контакты деканатов и кафедр*\n\n")
+
+	// Нумеруем контакты (номер учитывает страницу)
+	globalIndex := page * pageSize
+	for i, contact := range pageContacts {
+		number := globalIndex + i + 1
+		if contact.Type == "dean" {
+			text += fmt.Sprintf("%d) *%s* (Деканат)\n", number, contact.Faculty)
+		} else {
+			text += fmt.Sprintf("%d) *%s* - %s\n", number, contact.Faculty, contact.Department)
+		}
+		if contact.Phone != "" && contact.Phone != "-" {
+			text += fmt.Sprintf("   📞 %s\n", contact.Phone)
+		}
+		if contact.Email != "" {
+			text += fmt.Sprintf("   📧 %s\n", contact.Email)
+		}
+		text += "\n"
+	}
+
+	// Убираем последний перенос строки
+	if len(pageContacts) > 0 {
+		text = text[:len(text)-1]
+	}
+
+	text += fmt.Sprintf("_Страница %d из %d_\n", page+1, totalPages)
+
+	// Создаем клавиатуру с пагинацией
+	keyboard := p.keyboards.ContactsListMenu(pageContacts, page, totalPages, p.webAppURL)
+
+	return text, keyboard
+}
+
+// buildChatsPage показывает страницу с чатами
+func (p *PagesAPI) buildChatsPage(ctx context.Context, userID int64) (string, *maxbot.Keyboard) {
+	log.Printf("buildChatsPage called: userID=%d", userID)
+
+	// Используем статический список чатов из мини-апа
+	chats := []services.Chat{
+		{
+			ID:          "university",
+			Title:       "Чат университета",
+			Icon:        "🏫",
+			Description: stringPtr("Общий чат университета"),
+			URL:         "https://max.ru/join/chOYUhZ1oFxYkMm77gV9i7JJHXu4KsF8i6G9M3Ba-7M",
+		},
+		{
+			ID:          "faculty",
+			Title:       "Чат факультета",
+			Icon:        "🏛️",
+			Description: stringPtr("Общий чат факультета"),
+			URL:         "https://max.ru/join/_hUEhu3GAKV7jYgDkFg-U4u3gLp29RB4GvCsymD8z90",
+		},
+		{
+			ID:          "course",
+			Title:       "Чат курса",
+			Icon:        "📚",
+			Description: stringPtr("Общий чат вашего курса"),
+			URL:         "https://max.ru/join/bAABdA87H15VcMUqw3U7ZkLjPy9wXD7KXVklXedeU_Y",
+		},
+		{
+			ID:          "group",
+			Title:       "Чат студентов группы",
+			Icon:        "👥",
+			Description: stringPtr("Чат вашей группы"),
+			URL:         "https://max.ru/join/dP3jK3-tqSqwkkmiG8Vs_6hNBUeBP5R9i5zQMbb8Mls",
+		},
+		{
+			ID:          "curator",
+			Title:       "Чат с куратором группы",
+			Icon:        "👩‍🏫",
+			Description: stringPtr("Личные сообщения с куратором"),
+			URL:         "https://max.ru/join/qIdf56Ff7nqgoScPoaCGAga3VpKGEkT7i7EaSmINnvw",
+		},
+	}
+
+	// Формируем текст
+	text := utils.FormatHeader("Чаты") + "\n\n"
+
+	for i, chat := range chats {
+		// Формируем название чата с иконкой
+		chatTitle := chat.Title
+		if chat.Icon != "" {
+			chatTitle = chat.Icon + " " + chatTitle
+		}
+
+		// Добавляем описание, если есть
+		text += fmt.Sprintf("%d) *%s*\n", i+1, chatTitle)
+		if chat.Description != nil && *chat.Description != "" {
+			text += fmt.Sprintf("   %s\n", *chat.Description)
+		}
+		if i < len(chats)-1 {
+			text += "\n"
+		}
+	}
+
+	// Создаем клавиатуру с кнопками-ссылками на чаты
+	keyboard := p.keyboards.ChatsMenu(chats, p.webAppURL)
+
+	return text, keyboard
+}
+
+// buildClubsListPage показывает список клубов с пагинацией
+func (p *PagesAPI) buildClubsListPage(ctx context.Context, userID int64, page int) (string, *maxbot.Keyboard) {
+	log.Printf("buildClubsListPage called: userID=%d, page=%d", userID, page)
+
+	// Используем статический список клубов из мини-апа
+	allClubs := []services.Club{
+		{
+			ID:             "1202corp",
+			Name:           "1202 corp.",
+			Image:          "💻",
+			InternalNumber: "КЛ-001",
+			Description:    "Технологии, творчество, совместная разработка проектов и организация событий",
+			Author:         "Andrei Rastopshin",
+			MembersCount:   120,
+			ChatURL:        "https://max.ru/join/chOYUhZ1oFxYkMm77gV9i7JJHXu4KsF8i6G9M3Ba-7M",
+		},
+		{
+			ID:             "sports",
+			Name:           "Спортивный клуб",
+			Image:          "🏃",
+			InternalNumber: "КЛ-002",
+			Description:    "Активный образ жизни, тренировки, соревнования",
+			Author:         "Иванов Иван",
+			MembersCount:   45,
+			ChatURL:        "https://max.ru/join/chOYUhZ1oFxYkMm77gV9i7JJHXu4KsF8i6G9M3Ba-7M",
+		},
+		{
+			ID:             "music",
+			Name:           "Музыкальный клуб",
+			Image:          "🎵",
+			InternalNumber: "КЛ-003",
+			Description:    "Музыка, концерты, джем-сейшены",
+			Author:         "Петрова Мария",
+			MembersCount:   32,
+			ChatURL:        "https://max.ru/join/chOYUhZ1oFxYkMm77gV9i7JJHXu4KsF8i6G9M3Ba-7M",
+		},
+		{
+			ID:             "tech",
+			Name:           "IT-клуб",
+			Image:          "💻",
+			InternalNumber: "КЛ-004",
+			Description:    "Программирование, хакатоны, разработка",
+			Author:         "Сидоров Алексей",
+			MembersCount:   67,
+			ChatURL:        "https://max.ru/join/chOYUhZ1oFxYkMm77gV9i7JJHXu4KsF8i6G9M3Ba-7M",
+		},
+		{
+			ID:             "art",
+			Name:           "Творческий клуб",
+			Image:          "🎨",
+			InternalNumber: "КЛ-005",
+			Description:    "Рисование, дизайн, выставки",
+			Author:         "Козлова Анна",
+			MembersCount:   28,
+			ChatURL:        "https://max.ru/join/chOYUhZ1oFxYkMm77gV9i7JJHXu4KsF8i6G9M3Ba-7M",
+		},
+		{
+			ID:             "debate",
+			Name:           "Клуб дебатов",
+			Image:          "🗣️",
+			InternalNumber: "КЛ-006",
+			Description:    "Публичные выступления, дискуссии, ораторское искусство",
+			Author:         "Морозов Дмитрий",
+			MembersCount:   19,
+			ChatURL:        "https://max.ru/join/chOYUhZ1oFxYkMm77gV9i7JJHXu4KsF8i6G9M3Ba-7M",
+		},
+		{
+			ID:             "photo",
+			Name:           "Фото-клуб",
+			Image:          "📸",
+			InternalNumber: "КЛ-007",
+			Description:    "Фотография, обработка, выставки работ",
+			Author:         "Волкова Елена",
+			MembersCount:   41,
+			ChatURL:        "https://max.ru/join/chOYUhZ1oFxYkMm77gV9i7JJHXu4KsF8i6G9M3Ba-7M",
+		},
+	}
+
+	if len(allClubs) == 0 {
+		text := utils.FormatHeader("Клубы") + "\n\n"
+		text += "Клубы не найдены."
+		keyboard := p.keyboards.ClubsListMenu([]services.Club{}, 0, 0, p.webAppURL)
+		return text, keyboard
+	}
+
+	// Пагинация: по 20 клубов на страницу
+	const pageSize = 20
+	totalPages := (len(allClubs) + pageSize - 1) / pageSize
+
+	// Корректируем номер страницы
+	if page < 0 {
+		page = 0
+	}
+	if page >= totalPages {
+		page = totalPages - 1
+	}
+
+	// Получаем клубы для текущей страницы
+	start := page * pageSize
+	end := start + pageSize
+	if end > len(allClubs) {
+		end = len(allClubs)
+	}
+	pageClubs := allClubs[start:end]
+
+	// Формируем текст
+	text := utils.FormatHeader("Клубы") + "\n\n"
+	text += "*Клубы университета*\n\n"
+
+	// Нумеруем клубы (номер учитывает страницу)
+	globalIndex := page * pageSize
+	for i, club := range pageClubs {
+		number := globalIndex + i + 1
+		// Формируем название клуба с иконкой
+		clubTitle := club.Name
+		if club.Image != "" {
+			clubTitle = club.Image + " " + clubTitle
+		}
+
+		// В тексте используем полное название с номером
+		text += fmt.Sprintf("%d) *%s* (%s)\n", number, clubTitle, club.InternalNumber)
+		text += fmt.Sprintf("   %s\n", club.Description)
+		text += fmt.Sprintf("   Автор: %s\n", club.Author)
+		text += fmt.Sprintf("   Участников: %d\n", club.MembersCount)
+		if i < len(pageClubs)-1 {
+			text += "\n"
+		}
+	}
+
+	text += fmt.Sprintf("\n_Страница %d из %d_\n", page+1, totalPages)
+
+	// Создаем клавиатуру с кнопками клубов и пагинацией
+	keyboard := p.keyboards.ClubsListMenu(pageClubs, page, totalPages, p.webAppURL)
+
+	return text, keyboard
+}
+
+// stringPtr возвращает указатель на строку
+func stringPtr(s string) *string {
+	return &s
 }

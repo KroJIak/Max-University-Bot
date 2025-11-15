@@ -586,3 +586,130 @@ func (c *UniversityAPIClient) GetMaps(ctx context.Context, userID int64) (*MapsR
 
 	return &mapsResp, nil
 }
+
+// DeanContact представляет контакт деканата
+type DeanContact struct {
+	Faculty string `json:"faculty"`
+	Phone   string `json:"phone"`
+	Email   string `json:"email"`
+}
+
+// DepartmentContact представляет контакт кафедры
+type DepartmentContact struct {
+	Faculty    string  `json:"faculty"`
+	Department string  `json:"department"`
+	Phones     string  `json:"phones"`
+	Email      *string `json:"email"` // может быть null
+}
+
+// ContactsResponse представляет ответ API с контактами
+type ContactsResponse struct {
+	Success    bool                `json:"success"`
+	Deans      []DeanContact       `json:"deans"`
+	Departments []DepartmentContact `json:"departments"`
+	Error      *string             `json:"error,omitempty"`
+}
+
+// GetContacts получает контакты деканатов и кафедр
+func (c *UniversityAPIClient) GetContacts(ctx context.Context, userID int64) (*ContactsResponse, error) {
+	apiURL := fmt.Sprintf("%s/api/v1/students/%d/contacts", c.baseURL, userID)
+	reqURL, err := url.Parse(apiURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid URL: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "GET", reqURL.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var contactsResp ContactsResponse
+	if err := json.Unmarshal(body, &contactsResp); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	return &contactsResp, nil
+}
+
+// Chat представляет один чат
+type Chat struct {
+	ID          string  `json:"id"`
+	Title       string  `json:"title"`
+	Icon        string  `json:"icon,omitempty"`
+	Description *string `json:"description,omitempty"`
+	URL         string  `json:"url"`
+}
+
+// ChatsResponse представляет ответ API со списком чатов
+type ChatsResponse struct {
+	Success bool   `json:"success"`
+	Chats   []Chat `json:"chats"`
+	Error   string `json:"error,omitempty"`
+}
+
+// Club представляет один клуб
+type Club struct {
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	Image        string `json:"image,omitempty"`
+	InternalNumber string `json:"internal_number"`
+	Description  string `json:"description"`
+	Author       string `json:"author"`
+	MembersCount int    `json:"members_count"`
+	ChatURL      string `json:"chat_url"`
+}
+
+// GetChats получает список чатов для студента
+func (c *UniversityAPIClient) GetChats(ctx context.Context, userID int64) (*ChatsResponse, error) {
+	apiURL := fmt.Sprintf("%s/api/v1/students/%d/chats", c.baseURL, userID)
+	reqURL, err := url.Parse(apiURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid URL: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "GET", reqURL.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var chatsResp ChatsResponse
+	if err := json.Unmarshal(body, &chatsResp); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	return &chatsResp, nil
+}
